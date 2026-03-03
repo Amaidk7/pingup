@@ -205,3 +205,53 @@ export const sendConnectionRequest = async (req, res) => {
         res.json({success:false,message:error.message})
     }
 }
+
+
+//get user connections
+
+export const getUserConnections = async (req, res) => {
+    try {
+        const {userId}=req.auth()
+        const user =await User.findyById(userId).populate('connections followers following');
+        const connections = user.connections
+        const followers = user.followers
+        const following = user.following
+
+        const pendingConnections = (await Connection.find({to_user_id:userId,status:'pending'}).populate('from_user_id')).map((connection)=>connection.from_user_id)
+
+        res.json({success:true,connections,pendingConnections,followers,following})
+    } catch (error) {
+        console.log(error);
+        res.json({success:false,message:error.message})
+    }
+}
+
+
+//accept connection request
+
+export const acceptConnectionRequest = async (req, res) => {
+    try {
+        const {userId}=req.auth()
+        const {id}=req.body;
+        const connection = await Connection.findOne({from_user_id:id,to_user_id:userId})
+        if(!connection){
+            return res.json({success:false,message:'Connection request not found'})
+        }
+        const user = await User.findById(userId);
+        user.connections.push(id);
+        await user.save();
+
+        const toUser = await User.findById(userId);
+        toUser.connections.push(id);
+        await toUser.save();
+
+        connection.status = 'accepted';
+        await connection.save();
+
+        res.json({success:true,message:'Connection request accepted successfully'})
+
+    } catch (error) {
+        console.log(error);
+        res.json({success:false,message:error.message})
+    }
+}
