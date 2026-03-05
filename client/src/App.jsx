@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useEffect } from "react";
 import { Route, Routes, useLocation } from "react-router-dom";
 import Feed from "./pages/Feed";
 import Login from "./pages/Login";
@@ -11,18 +11,18 @@ import CreatePost from "./pages/CreatePost";
 import { useUser, useAuth } from "@clerk/clerk-react";
 import Layout from "./pages/Layout";
 import toast, { Toaster } from "react-hot-toast";
-import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { fetchUser } from "./features/user/userSlice";
 import { fetchConnections } from "./features/connections/connectionSlice";
 import { addMessage } from "./features/messages/messagesSlice";
+
 const App = () => {
   const { user } = useUser();
-
   const { getToken } = useAuth();
-  const {pathname} = useLocation()
+  const { pathname } = useLocation();
   const pathnameRef = useRef(pathname);
   const dispatch = useDispatch();
+
   useEffect(() => {
     const fetchData = async () => {
       if (user) {
@@ -40,29 +40,42 @@ const App = () => {
 
   useEffect(() => {
     if (user) {
+
       const eventSource = new EventSource(
-        import.meta.env.VITE_BASEURL + "/api/message/" + user.id,
+        import.meta.env.VITE_BASEURL + "/api/message/" + user.id
       );
-      eventSource.onmessage = (event) =>{
 
-        const message = JSON.parse(event.data)
+      eventSource.onmessage = (event) => {
 
-        if(pathnameRef.current === ('/messages'+ message.from_user_id._id)){
-          dispatch(addMessage(message))
-        }else{
-            toast.custom(()=>(
-              <Notification t={t} message={message}/>
-            ),{position: 'bottom-right'})
+        let message;
+
+        try {
+          message = JSON.parse(event.data);
+        } catch (error) {
+          return;
         }
-      }
-      return ()=>{
-        eventSource.close()
-      }
+
+        if (!message || !message.from_user_id) return;
+
+        if (pathnameRef.current === "/messages/" + message.from_user_id._id) {
+          dispatch(addMessage(message));
+        } else {
+          toast(message.text || "New message received", {
+            position: "bottom-right",
+          });
+        }
+      };
+
+      return () => {
+        eventSource.close();
+      };
     }
-  },[user,dispatch]);
+  }, [user, dispatch]);
+
   return (
     <>
       <Toaster />
+
       <Routes>
         <Route path="/" element={!user ? <Login /> : <Layout />}>
           <Route index element={<Feed />} />

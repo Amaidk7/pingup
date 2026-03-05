@@ -2,6 +2,8 @@ import fs from "fs";
 import imagekit from "../configs/imageKit.js";
 import Post from "../models/Post.js";
 import User from "../models/User.js";
+
+
 // add post
 
 export const addPost = async (req, res) => {
@@ -11,10 +13,13 @@ export const addPost = async (req, res) => {
     const images = req.files;
 
     let image_urls = [];
+
     if (images && images.length > 0) {
       image_urls = await Promise.all(
         images.map(async (image) => {
+
           const fileBuffer = fs.readFileSync(image.path);
+
           const response = await imagekit.upload({
             file: fileBuffer,
             fileName: image.originalname,
@@ -29,8 +34,9 @@ export const addPost = async (req, res) => {
               { width: "1280" },
             ],
           });
+
           return url;
-        }),
+        })
       );
     }
 
@@ -40,54 +46,115 @@ export const addPost = async (req, res) => {
       image_urls,
       post_type,
     });
-    res.json({ success: true, message: "post created successfully" });
+
+    res.json({
+      success: true,
+      message: "post created successfully",
+    });
+
   } catch (error) {
     console.log(error);
-    res.json({ success: false, message: error.message });
+    res.json({
+      success: false,
+      message: error.message,
+    });
   }
 };
 
 
-//get posts
+
+// get feed posts
 
 export const getFeedPosts = async (req, res) => {
-    try {
-        const {userId} = req.auth();
-        const user = await User.findById(userId);
+  try {
 
-        //user connections and followings
-        const userIds=[userId,...user.connection, ...user.following]
-        const posts = await Post.find({user:{$in:userIds}}).populate('user').sort({createdAt:-1});
-        res.json({success:true,posts})
-    } catch (error) {
-        console.log(error);
-        res.json({success:false,message:error.message})
+    const { userId } = req.auth();
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.json({
+        success: false,
+        message: "User not found",
+      });
     }
-}
+
+    // user connections and followings
+    const userIds = [
+      userId,
+      ...(user.connections || []),
+      ...(user.following || [])
+    ];
+
+    const posts = await Post.find({
+      user: { $in: userIds }
+    })
+      .populate("user")
+      .sort({ createdAt: -1 });
+
+    res.json({
+      success: true,
+      posts,
+    });
+
+  } catch (error) {
+    console.log(error);
+    res.json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 
 
 // like post
 
 export const likePost = async (req, res) => {
-    try {
-        const {userId} = req.auth();
-        const {postId} = req.params;
+  try {
 
-        const post = await Post.findById(postId);
+    const { userId } = req.auth();
+    const { postId } = req.params;
 
-        if(post.likes_count.includes(userId)){
-            post.likes_count = post.likes_count.filter(user=>user !==userId);
-            await post.save();
-            return res.json({success:true,message:'post unliked'})
-        }else{
-            post.likes_count.push(userId);
-            await post.save();
-            return res.json({success:true,message:'post liked'})
-        }
+    const post = await Post.findById(postId);
 
-    
-    } catch (error) {
-        console.log(error);
-        res.json({success:false,message:error.message})
+    if (!post) {
+      return res.json({
+        success: false,
+        message: "Post not found",
+      });
     }
-}
+
+    if (post.likes_count.includes(userId)) {
+
+      post.likes_count = post.likes_count.filter(
+        (user) => user !== userId
+      );
+
+      await post.save();
+
+      return res.json({
+        success: true,
+        message: "post unliked",
+      });
+
+    } else {
+
+      post.likes_count.push(userId);
+
+      await post.save();
+
+      return res.json({
+        success: true,
+        message: "post liked",
+      });
+    }
+
+  } catch (error) {
+    console.log(error);
+    res.json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
