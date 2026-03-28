@@ -58,7 +58,7 @@ const StoryViewer = ({ viewStory, setViewStory }) => {
           <img
             src={viewStory.media_url}
             alt=""
-            className="max-w-full max-h-screen object-contain"
+            className="max-w-full max-h-screen object-contain rounded-xl"
           />
         );
 
@@ -68,7 +68,7 @@ const StoryViewer = ({ viewStory, setViewStory }) => {
           <video
             onEnded={() => setViewStory(null)}
             src={viewStory.media_url}
-            className="max-h-screen"
+            className="max-h-screen rounded-xl"
             controls
             autoPlay
           />
@@ -77,7 +77,7 @@ const StoryViewer = ({ viewStory, setViewStory }) => {
       case "text":
 
         return (
-          <div className="w-full h-full flex items-center justify-center p-8 text-white text-2xl text-center">
+          <div className="w-full h-full flex items-center justify-center p-10 text-white text-2xl text-center font-light leading-relaxed">
             {viewStory.content}
           </div>
         );
@@ -91,7 +91,7 @@ const StoryViewer = ({ viewStory, setViewStory }) => {
   return (
 
     <div
-      className="fixed inset-0 h-screen bg-black bg-opacity-90 z-110 flex items-center justify-center"
+      className="fixed inset-0 h-screen z-50 flex items-center justify-center"
       style={{
         backgroundColor:
           viewStory.media_type === "text"
@@ -101,44 +101,36 @@ const StoryViewer = ({ viewStory, setViewStory }) => {
     >
 
       {/* Progress Bar */}
-      <div className="absolute top-0 left-0 w-full h-1 bg-gray-700">
-
+      <div className="absolute top-0 left-0 w-full h-0.5 bg-white/20">
         <div
           className="h-full bg-white transition-all duration-100 ease-linear"
           style={{ width: `${progress}%` }}
         ></div>
-
       </div>
 
       {/* User Info */}
-      <div className="absolute top-4 left-4 flex items-center space-x-3 p-2 px-4 sm:p-4 sm:px-8 backdrop:blur-2xl rounded bg-black/50">
-
+      <div className="absolute top-5 left-4 flex items-center gap-2.5">
         <img
           src={viewStory?.user?.profile_picture}
           alt=""
-          className="size-7 sm:size-8 rounded-full object-cover border border-white"
+          className="w-9 h-9 rounded-full object-cover border-2 border-white/50"
         />
-
-        <div className="text-white font-medium flex items-center gap-1.5">
-
-          <span>{viewStory?.user?.full_name}</span>
-
-          <BadgeCheck size={18} />
-
+        <div className="text-white flex items-center gap-1.5">
+          <span className="text-sm font-semibold">{viewStory?.user?.full_name}</span>
+          <BadgeCheck className="w-4 h-4 text-sky-300" />
         </div>
-
       </div>
 
       {/* Close Button */}
       <button
         onClick={handleClose}
-        className="absolute top-4 right-4 text-white text-3xl font-bold focus:outline-none"
+        className="absolute top-4 right-4 w-9 h-9 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition cursor-pointer"
       >
-        <X className="w-8 h-8 hover:scale-110 transition cursor-pointer" />
+        <X className="w-5 h-5" />
       </button>
 
       {/* Content */}
-      <div className="max-w-[90vw] flex items-center justify-center">
+      <div className="max-w-[90vw] max-h-[80vh] flex items-center justify-center">
         {renderContent()}
       </div>
 

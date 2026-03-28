@@ -1,4 +1,4 @@
-import { Calendar, MapPin, PenBox, Verified } from "lucide-react";
+import { Calendar, MapPin, PenLine, Verified } from "lucide-react";
 import React from "react";
 import moment from "moment";
 
@@ -7,105 +7,105 @@ const UserProfileInfo = ({ user, posts, profileId, setShowEdit }) => {
   const profileImage =
     user?.profile_picture && user.profile_picture !== ""
       ? user.profile_picture
-      : `https://ui-avatars.com/api/?name=${user?.full_name}`;
+      : `https://ui-avatars.com/api/?name=${user?.full_name}&background=f1f5f9&color=475569`;
 
   return (
-    <div className="relative py-4 px-6 md:px-8 bg-white">
+    <div className="relative py-5 px-6 md:px-8 bg-white">
 
       <div className="flex flex-col md:flex-row items-start gap-6">
 
-        <div className="w-32 h-32 border-4 border-white shadow-lg absolute -top-16 rounded-full overflow-hidden">
-
+        {/* Avatar */}
+        <div className="w-28 h-28 border-4 border-white shadow-md absolute -top-14 rounded-full overflow-hidden ring-1 ring-slate-100">
           <img
             src={profileImage}
             alt="profile"
-            className="w-full h-full object-cover rounded-full z-10"
+            className="w-full h-full object-cover"
           />
-
         </div>
 
         <div className="w-full pt-16 md:pt-0 md:pl-36">
 
-          <div className="flex flex-col md:flex-row items-start justify-between">
+          {/* Name + Edit */}
+          <div className="flex flex-col md:flex-row items-start justify-between gap-3">
 
             <div>
-
-              <div className="flex items-center gap-3">
-
-                <h1 className="text-2xl font-bold text-gray-900">
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl font-bold text-slate-900">
                   {user?.full_name}
                 </h1>
-
-                <Verified className="w-6 h-6 text-blue-500" />
-
+                <Verified className="w-5 h-5 text-sky-500" />
               </div>
 
-              <p className="text-gray-600">
+              <p className="text-sm text-slate-400 mt-0.5">
                 {user?.username ? `@${user.username}` : "Add a username"}
               </p>
-
             </div>
 
             {!profileId && (
               <button
                 onClick={() => setShowEdit(true)}
-                className="flex items-center gap-2 border border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-lg font-medium transition-colors mt-4 md:mt-0 cursor-pointer"
+                className="flex items-center gap-2 border border-slate-200 hover:border-slate-400 hover:bg-slate-50 px-4 py-2 rounded-xl text-sm font-medium text-slate-600 transition-all duration-200 cursor-pointer"
               >
-                <PenBox className="w-4 h-4" />
-                Edit
+                <PenLine className="w-3.5 h-3.5" />
+                Edit Profile
               </button>
             )}
 
           </div>
 
-          <p className="text-gray-700 text-sm max-w-md mt-4">
-            {user?.bio}
-          </p>
+          {/* Bio */}
+          {user?.bio && (
+            <p className="text-sm text-slate-600 max-w-md mt-3 leading-relaxed">
+              {user.bio}
+            </p>
+          )}
 
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-gray-500 mt-4">
+          {/* Meta */}
+          <div className="flex flex-wrap items-center gap-4 text-xs text-slate-400 mt-3">
+
+            {(user?.location || !profileId) && (
+              <span className="flex items-center gap-1.5">
+                <MapPin className="w-3.5 h-3.5" />
+                {user?.location || "Add location"}
+              </span>
+            )}
 
             <span className="flex items-center gap-1.5">
-              <MapPin className="w-4 h-4" />
-              {user?.location ? user.location : "Add location"}
-            </span>
-
-            <span className="flex items-center gap-1.5">
-              <Calendar className="w-4 h-4" />
+              <Calendar className="w-3.5 h-3.5" />
               Joined{" "}
-              <span className="font-medium">
+              <span className="font-medium text-slate-500">
                 {user?.createdAt ? moment(user.createdAt).fromNow() : ""}
               </span>
             </span>
 
           </div>
 
-          <div className="flex items-center gap-6 mt-6 border-t border-gray-200 pt-4">
+          {/* Stats */}
+          <div className="flex items-center gap-6 mt-5 pt-4 border-t border-slate-50">
 
-            <div>
-              <span className="sm:text-xl font-bold text-gray-900">
+            <div className="text-center">
+              <span className="text-lg font-bold text-slate-900">
                 {posts?.length || 0}
               </span>
-              <span className="text-xs sm:text-sm text-gray-500 ml-1.5">
-                Posts
-              </span>
+              <p className="text-xs text-slate-400 mt-0.5">Posts</p>
             </div>
 
-            <div>
-              <span className="sm:text-xl font-bold text-gray-900">
+            <div className="w-px h-8 bg-slate-100"></div>
+
+            <div className="text-center">
+              <span className="text-lg font-bold text-slate-900">
                 {user?.followers?.length || 0}
               </span>
-              <span className="text-xs sm:text-sm text-gray-500 ml-1.5">
-                Followers
-              </span>
+              <p className="text-xs text-slate-400 mt-0.5">Followers</p>
             </div>
 
-            <div>
-              <span className="sm:text-xl font-bold text-gray-900">
+            <div className="w-px h-8 bg-slate-100"></div>
+
+            <div className="text-center">
+              <span className="text-lg font-bold text-slate-900">
                 {user?.following?.length || 0}
               </span>
-              <span className="text-xs sm:text-sm text-gray-500 ml-1.5">
-                Following
-              </span>
+              <p className="text-xs text-slate-400 mt-0.5">Following</p>
             </div>
 
           </div>

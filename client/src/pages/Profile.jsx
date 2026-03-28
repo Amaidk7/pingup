@@ -72,28 +72,26 @@ const Profile = () => {
 
   }, [profileId, currentUser]);
 
+  const tabs = ["posts", "media", "likes"];
+
   return user ? (
 
-    <div className="relative h-full overflow-y-scroll bg-gray-50 p-6">
+    <div className="relative h-full overflow-y-scroll no-scrollbar bg-slate-50">
 
-      <div className="max-w-3xl mx-auto">
+      <div className="max-w-2xl mx-auto pb-10 px-4 sm:px-6">
 
         {/* Profile Card */}
-        <div className="bg-white rounded-2xl shadow overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden mt-4">
 
           {/* Cover Photo */}
-          <div className="h-40 md:h-56 bg-linear-to-r from-indigo-200 via-purple-200 to-pink-200">
-
+          <div className="h-36 md:h-48 bg-gradient-to-br from-slate-100 via-slate-200 to-slate-100">
             {user.cover_photo && (
-
               <img
                 src={user.cover_photo}
                 alt=""
                 className="w-full h-full object-cover"
               />
-
             )}
-
           </div>
 
           {/* User Info */}
@@ -109,83 +107,70 @@ const Profile = () => {
         {/* Tabs */}
         <div className="mt-6">
 
-          <div className="bg-white rounded-xl shadow p-1 flex max-w-md mx-auto">
-
-            {["posts", "media", "likes"].map((tab) => (
-
+          <div className="flex items-center gap-1 bg-white border border-slate-100 rounded-2xl p-1 shadow-sm">
+            {tabs.map((tab) => (
               <button
                 onClick={() => setActiveTab(tab)}
                 key={tab}
-                className={`flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-colors cursor-pointer ${
+                className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-all duration-200 cursor-pointer capitalize ${
                   activeTab === tab
-                    ? "bg-indigo-600 text-white"
-                    : "text-gray-600 hover:text-gray-900"
+                    ? "bg-slate-900 text-white shadow"
+                    : "text-slate-500 hover:text-slate-800"
                 }`}
               >
-
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
-
+                {tab}
               </button>
-
             ))}
-
           </div>
 
-          {/* Posts */}
+          {/* Posts Tab */}
           {activeTab === "posts" && (
-
-            <div className="mt-6 flex flex-col items-center gap-6">
-
-              {posts?.map((post) => (
-                <PostCard key={post._id} post={post} />
-              ))}
-
+            <div className="mt-5 space-y-4">
+              {posts?.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16 text-center">
+                  <p className="text-slate-400 text-sm">No posts yet</p>
+                </div>
+              ) : (
+                posts?.map((post) => (
+                  <PostCard key={post._id} post={post} />
+                ))
+              )}
             </div>
-
           )}
 
-          {/* Media */}
+          {/* Media Tab */}
           {activeTab === "media" && (
-
-            <div className="flex flex-wrap mt-6 max-w-6xl">
-
+            <div className="mt-5 grid grid-cols-3 gap-1.5 rounded-2xl overflow-hidden">
               {posts
                 ?.filter((post) => post.image_urls?.length > 0)
-                .map((post) => (
-
-                  <React.Fragment key={post._id}>
-
-                    {post.image_urls.map((image, index) => (
-
-                      <Link
-                        target="_blank"
-                        to={image}
-                        key={index}
-                        className="relative group"
-                      >
-
-                        <img
-                          src={image}
-                          className="w-64 aspect-video object-cover"
-                          alt=""
-                        />
-
-                        <p className="absolute bottom-0 right-0 text-xs p-1 px-3 backdrop-blur-xl text-white opacity-0 group-hover:opacity-100 transition duration-300">
-
-                          Posted {moment(post.createdAt).fromNow()}
-
+                .flatMap((post) =>
+                  post.image_urls.map((image, index) => (
+                    <Link
+                      target="_blank"
+                      to={image}
+                      key={`${post._id}-${index}`}
+                      className="relative group aspect-square overflow-hidden rounded-xl"
+                    >
+                      <img
+                        src={image}
+                        className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                        alt=""
+                      />
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition duration-300 flex items-end">
+                        <p className="w-full text-[10px] px-2 pb-2 text-white opacity-0 group-hover:opacity-100 transition duration-300">
+                          {moment(post.createdAt).fromNow()}
                         </p>
+                      </div>
+                    </Link>
+                  ))
+                )}
 
-                      </Link>
-
-                    ))}
-
-                  </React.Fragment>
-
-                ))}
-
+              {posts?.filter((post) => post.image_urls?.length > 0).length === 0 && (
+                <div className="col-span-3 py-16 text-center">
+                  <p className="text-slate-400 text-sm">No media yet</p>
+                </div>
+              )}
             </div>
-
           )}
 
         </div>

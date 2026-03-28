@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { ImageIcon, SendHorizonal } from "lucide-react";
+import { ImageIcon, SendHorizonal, X } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
@@ -26,7 +26,6 @@ const ChatBox = () => {
 
   const messagesEndRef = useRef(null);
 
-  // fetch messages
   const fetchUserMessages = async () => {
     try {
       const token = await getToken();
@@ -36,7 +35,6 @@ const ChatBox = () => {
     }
   };
 
-  // send message
   const sendMessage = async () => {
     try {
 
@@ -58,7 +56,6 @@ const ChatBox = () => {
 
         setText("");
         setImage(null);
-
         dispatch(addMessage(data.message));
 
       } else {
@@ -74,7 +71,6 @@ const ChatBox = () => {
     }
   };
 
-  // load messages
   useEffect(() => {
 
     fetchUserMessages();
@@ -85,20 +81,15 @@ const ChatBox = () => {
 
   }, [userId]);
 
-  // find chat user
   useEffect(() => {
 
     if (connections?.length > 0) {
-
       const foundUser = connections.find((c) => c._id === userId);
-
       if (foundUser) setUser(foundUser);
-
     }
 
   }, [connections, userId]);
 
-  // auto scroll
   useEffect(() => {
 
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -108,110 +99,101 @@ const ChatBox = () => {
   const profileImage =
     user?.profile_picture && user.profile_picture !== ""
       ? user.profile_picture
-      : `https://ui-avatars.com/api/?name=${user?.full_name}`;
+      : `https://ui-avatars.com/api/?name=${user?.full_name}&background=f1f5f9&color=475569`;
 
   return (
 
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col h-screen bg-slate-50">
 
       {/* Header */}
       {user && (
-        <div className="flex items-center gap-2 p-2 md:px-10 xl:pl-42 bg-linear-to-r from-indigo-50 to-purple-50 border-gray-300">
-
-          <img
-            src={profileImage}
-            alt="profile"
-            className="size-8 rounded-full"
-          />
-
-          <div>
-            <p className="font-medium">{user.full_name}</p>
-            <p className="text-sm text-gray-500 -mt-1.5">@{user.username}</p>
+        <div className="flex items-center gap-3 px-5 md:px-8 py-3 bg-white border-b border-slate-100 shadow-sm shrink-0">
+          <div className="relative">
+            <img
+              src={profileImage}
+              alt="profile"
+              className="w-9 h-9 rounded-full object-cover ring-2 ring-slate-100"
+            />
+            <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-400 rounded-full border-2 border-white"></span>
           </div>
-
+          <div>
+            <p className="font-semibold text-slate-900 text-sm">{user.full_name}</p>
+            <p className="text-xs text-slate-400">@{user.username}</p>
+          </div>
         </div>
       )}
 
       {/* Messages */}
-      <div className="p-5 md:px-10 h-full overflow-y-scroll">
-
-        <div className="space-y-4 max-w-4xl mx-auto">
+      <div className="flex-1 overflow-y-auto no-scrollbar px-5 md:px-8 py-6">
+        <div className="space-y-3 max-w-2xl mx-auto">
 
           {[...messages]
             .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
-            .map((message, index) => (
-
-              <div
-                key={index}
-                className={`flex flex-col ${
-                  message.to_user_id !== userId
-                    ? "items-start"
-                    : "items-end"
-                }`}
-              >
-
+            .map((message, index) => {
+              const isSent = message.to_user_id !== userId;
+              return (
                 <div
-                  className={`p-2 text-sm max-w-sm bg-white text-slate-700 rounded-lg shadow ${
-                    message.to_user_id !== userId
-                      ? "rounded-bl-none"
-                      : "rounded-br-none"
-                  }`}
+                  key={index}
+                  className={`flex ${isSent ? "justify-start" : "justify-end"}`}
                 >
-
-                  {message.message_type === "image" && (
-
-                    <img
-                      src={message.media_url}
-                      className="w-full max-w-sm rounded-lg mb-1"
-                      alt=""
-                    />
-
-                  )}
-
-                  <p>{message.text}</p>
-
+                  <div
+                    className={`max-w-xs md:max-w-sm px-4 py-2.5 rounded-2xl text-sm shadow-sm ${
+                      isSent
+                        ? "bg-white text-slate-800 rounded-bl-sm border border-slate-100"
+                        : "bg-slate-900 text-white rounded-br-sm"
+                    }`}
+                  >
+                    {message.message_type === "image" && (
+                      <img
+                        src={message.media_url}
+                        className="w-full rounded-xl mb-2"
+                        alt=""
+                      />
+                    )}
+                    {message.text && <p className="leading-relaxed">{message.text}</p>}
+                  </div>
                 </div>
-
-              </div>
-
-            ))}
+              );
+            })}
 
           <div ref={messagesEndRef} />
-
         </div>
-
       </div>
 
-      {/* Input */}
-      <div className="px-4">
+      {/* Image preview */}
+      {image && (
+        <div className="px-5 md:px-8 pb-2 max-w-2xl mx-auto w-full">
+          <div className="relative inline-block">
+            <img
+              src={URL.createObjectURL(image)}
+              alt=""
+              className="h-16 rounded-xl border border-slate-200"
+            />
+            <button
+              onClick={() => setImage(null)}
+              className="absolute -top-2 -right-2 w-5 h-5 bg-slate-900 text-white rounded-full flex items-center justify-center cursor-pointer"
+            >
+              <X className="w-3 h-3" />
+            </button>
+          </div>
+        </div>
+      )}
 
-        <div className="flex items-center gap-3 pl-5 p-1.5 bg-white w-full max-w-xl mx-auto border border-gray-200 shadow rounded-full mb-5">
+      {/* Input */}
+      <div className="shrink-0 px-4 md:px-8 pb-5 pt-2">
+        <div className="flex items-center gap-3 pl-5 pr-2 py-2 bg-white border border-slate-200 shadow-sm rounded-2xl max-w-2xl mx-auto">
 
           <input
             type="text"
-            className="flex-1 outline-none text-slate-700"
+            className="flex-1 outline-none text-sm text-slate-700 placeholder-slate-300"
             placeholder="Type a message..."
             onKeyDown={(e) => e.key === "Enter" && sendMessage()}
             onChange={(e) => setText(e.target.value)}
             value={text}
           />
 
-          <label htmlFor="image">
-
-            {image ? (
-
-              <img
-                src={URL.createObjectURL(image)}
-                alt=""
-                className="h-8 rounded"
-              />
-
-            ) : (
-
-              <ImageIcon className="size-7 text-gray-400 cursor-pointer" />
-
-            )}
-
+          <label htmlFor="image" className="cursor-pointer shrink-0">
+            <ImageIcon className="w-5 h-5 text-slate-300 hover:text-slate-500 transition" />
             <input
               type="file"
               id="image"
@@ -219,20 +201,16 @@ const ChatBox = () => {
               hidden
               onChange={(e) => setImage(e.target.files[0])}
             />
-
           </label>
 
           <button
             onClick={sendMessage}
-            className="bg-linear-to-br from-indigo-500 to-purple-600 hover:from-indigo-700 hover:to-purple-900 active:scale-95 cursor-pointer text-white p-2 rounded-full"
+            className="w-9 h-9 flex items-center justify-center bg-slate-900 hover:bg-slate-700 active:scale-95 text-white rounded-xl transition cursor-pointer shrink-0"
           >
-
-            <SendHorizonal size={18} />
-
+            <SendHorizonal className="w-4 h-4" />
           </button>
 
         </div>
-
       </div>
 
     </div>

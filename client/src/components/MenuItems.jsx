@@ -4,7 +4,7 @@ import { NavLink } from "react-router-dom";
 
 const MenuItems = ({ setSidebarOpen }) => {
   return (
-    <div className="px-6 text-gray-600 space-y-1 font-medium">
+    <div className="px-4 space-y-0.5 font-medium">
       {menuItemsData.map(({ to, label, Icon }) => (
         <NavLink
           key={to}
@@ -12,13 +12,23 @@ const MenuItems = ({ setSidebarOpen }) => {
           end={to === "/"}
           onClick={() => setSidebarOpen(false)}
           className={({ isActive }) =>
-            `px-3.5 py-2 flex items-center gap-3 rounded-xl ${
-              isActive ? "bg-indigo-50 text-indigo-700" : "hover:bg-gray-50"
+            `group flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm transition-all duration-200 ${
+              isActive
+                ? "bg-slate-900 text-white shadow-sm"
+                : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
             }`
           }
         >
-          <Icon className="w-5 h-5" />
-          {label}
+          {({ isActive }) => (
+            <>
+              <Icon
+                className={`w-4 h-4 transition-transform duration-200 group-hover:scale-110 ${
+                  isActive ? "text-white" : "text-slate-400 group-hover:text-slate-700"
+                }`}
+              />
+              <span className="tracking-wide">{label}</span>
+            </>
+          )}
         </NavLink>
       ))}
     </div>

@@ -52,47 +52,52 @@ const Feed = () => {
 
   return !loading ? (
 
-    <div className="h-full overflow-y-scroll no-scrollbar py-10 xl:pr-5 flex items-start justify-center xl:gap-8">
+    <div className="h-full overflow-y-scroll no-scrollbar flex items-start justify-center xl:gap-8 py-6 xl:pr-4">
 
-      {/* Stories and post list */}
-      <div>
+      {/* Main Feed */}
+      <div className="w-full max-w-2xl">
 
-        <StoriesBar />
+        {/* Stories */}
+        <div className="mb-2">
+          <StoriesBar />
+        </div>
 
-        <div className="p-4 space-y-6">
-
-          {feeds?.map((post) => (
-            <PostCard key={post._id} post={post} />
-          ))}
-
+        {/* Posts */}
+        <div className="px-4 space-y-4">
+          {feeds?.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+              <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center mb-4">
+                <span className="text-2xl">✦</span>
+              </div>
+              <p className="text-slate-500 text-sm font-medium">No posts yet</p>
+              <p className="text-slate-400 text-xs mt-1">Follow people to see their posts here</p>
+            </div>
+          ) : (
+            feeds?.map((post) => (
+              <PostCard key={post._id} post={post} />
+            ))
+          )}
         </div>
 
       </div>
 
       {/* Right Sidebar */}
-      <div className="max-xl:hidden sticky top-0">
+      <div className="max-xl:hidden sticky top-0 pt-2 min-w-[17rem]">
 
-        <div className="max-w-xs bg-white text-xs p-4 rounded-md inline-flex flex-col gap-2 shadow">
-
-          <h3 className="text-slate-800 font-semibold">
+        {/* Sponsored */}
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
+          <p className="text-[10px] font-semibold text-slate-400 tracking-widest uppercase mb-3">
             Sponsored
-          </h3>
-
+          </p>
           <img
             src={assets.sponsored_img}
-            className="w-75 h-50 rounded-md"
+            className="w-full rounded-xl object-cover aspect-video"
             alt=""
           />
-
-          <p className="text-slate-600">
-            Email marketing
+          <p className="text-sm font-semibold text-slate-800 mt-3">Email Marketing</p>
+          <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+            Supercharge your marketing with a powerful, easy-to-use platform built for results.
           </p>
-
-          <p className="text-slate-400">
-            Supercharge your marketing with a powerful, easy-to-use platform
-            built for results.
-          </p>
-
         </div>
 
         <RecentMessages />

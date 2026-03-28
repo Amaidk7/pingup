@@ -40,13 +40,11 @@ const App = () => {
 
   useEffect(() => {
     if (user) {
-
       const eventSource = new EventSource(
-        import.meta.env.VITE_BASEURL + "/api/message/" + user.id
+        import.meta.env.VITE_BASEURL + "/api/message/" + user.id,
       );
 
       eventSource.onmessage = (event) => {
-
         let message;
 
         try {
@@ -74,7 +72,17 @@ const App = () => {
 
   return (
     <>
-      <Toaster />
+      <Toaster
+        position="bottom-right"
+        toastOptions={{
+          style: {
+            borderRadius: "12px",
+            background: "#0f172a",
+            color: "#f8fafc",
+            fontSize: "13px",
+          },
+        }}
+      />
 
       <Routes>
         <Route path="/" element={!user ? <Login /> : <Layout />}>
