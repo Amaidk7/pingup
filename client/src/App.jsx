@@ -17,6 +17,9 @@ import { useDispatch } from "react-redux";
 import { fetchUser } from "./features/user/userSlice";
 import { fetchConnections } from "./features/connections/connectionSlice";
 import { addMessage } from "./features/messages/messagesSlice";
+import Notification from "./components/Notification";
+
+const POLL_INTERVAL = 5000; // 5 seconds
 
 const App = () => {
   const { user } = useUser();
@@ -24,7 +27,9 @@ const App = () => {
   const { pathname } = useLocation();
   const pathnameRef = useRef(pathname);
   const dispatch = useDispatch();
+  const pollRef = useRef(null);
 
+  // ── initial data fetch ──
   useEffect(() => {
     const fetchData = async () => {
       if (user) {
@@ -36,43 +41,59 @@ const App = () => {
     fetchData();
   }, [user, getToken, dispatch]);
 
+  // ── keep pathnameRef updated ──
   useEffect(() => {
     pathnameRef.current = pathname;
   }, [pathname]);
 
+  // ── SSE: real-time messages ──
   useEffect(() => {
-    if (user) {
+    if (!user) return;
 
-      const eventSource = new EventSource(
-        import.meta.env.VITE_BASEURL + "/api/message/" + user.id
-      );
+    const eventSource = new EventSource(
+      import.meta.env.VITE_BASEURL + "/api/message/" + user.id
+    );
 
-      eventSource.onmessage = (event) => {
+    eventSource.onmessage = (event) => {
+      let message;
+      try { message = JSON.parse(event.data); } catch { return; }
+      if (!message || !message.from_user_id) return;
 
-        let message;
+      const currentPath = pathnameRef.current;
+      const senderId = message.from_user_id?._id || message.from_user_id;
 
-        try {
-          message = JSON.parse(event.data);
-        } catch (error) {
-          return;
-        }
+      if (currentPath === "/messages/" + senderId) {
+        // user is already in this chat — add message directly
+        dispatch(addMessage(message));
+      } else {
+        // user is on another page — show notification toast
+        toast.custom((t) => (
+          <Notification t={t} message={message} />
+        ), { position: "bottom-right", duration: 5000 });
+      }
+    };
 
-        if (!message || !message.from_user_id) return;
+    eventSource.onerror = () => { eventSource.close(); };
 
-        if (pathnameRef.current === "/messages/" + message.from_user_id._id) {
-          dispatch(addMessage(message));
-        } else {
-          toast(message.text || "New message received", {
-            position: "bottom-right",
-          });
-        }
-      };
-
-      return () => {
-        eventSource.close();
-      };
-    }
+    return () => { eventSource.close(); };
   }, [user, dispatch]);
+
+  // ── Polling: connections + user data har 5 sec refresh ──
+  useEffect(() => {
+    if (!user) return;
+
+    const poll = async () => {
+      try {
+        const token = await getToken();
+        dispatch(fetchConnections(token));
+        dispatch(fetchUser(token));
+      } catch { /* silent fail */ }
+    };
+
+    pollRef.current = setInterval(poll, POLL_INTERVAL);
+
+    return () => clearInterval(pollRef.current);
+  }, [user, getToken, dispatch]);
 
   return (
     <>
@@ -81,9 +102,10 @@ const App = () => {
         toastOptions={{
           style: {
             borderRadius: "12px",
-            background: "#0f172a",
-            color: "#f8fafc",
+            background: "#18181b",
+            color: "#f4f4f5",
             fontSize: "13px",
+            border: "1px solid rgba(255,255,255,0.08)",
           },
         }}
       />
