@@ -1,5 +1,5 @@
 import express from "express";
-import { addPost, getFeedPosts, likePost } from "../controllers/postController.js";
+import { addPost, getFeedPosts, likePost, deletePost } from "../controllers/postController.js";
 import { protect } from "../middlewares/auth.js";
 import { upload } from "../configs/multer.js";
 
@@ -9,7 +9,8 @@ postRouter.post("/add", upload.array("images", 4), protect, addPost);
 
 postRouter.get("/feed", protect, getFeedPosts);
 
-// FIXED ROUTE
 postRouter.post("/like/:postId", protect, likePost);
+
+postRouter.delete("/delete/:postId", protect, deletePost);
 
 export default postRouter;

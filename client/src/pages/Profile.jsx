@@ -56,6 +56,11 @@ const Profile = () => {
 
   };
 
+  // post delete hone par list se remove karo
+  const handlePostDelete = (postId) => {
+    setPosts((prev) => prev.filter((post) => post._id !== postId));
+  };
+
   useEffect(() => {
 
     if (!currentUser) return;
@@ -132,7 +137,7 @@ const Profile = () => {
                 </div>
               ) : (
                 posts?.map((post) => (
-                  <PostCard key={post._id} post={post} />
+                  <PostCard key={post._id} post={post} onDelete={handlePostDelete} />
                 ))
               )}
             </div>

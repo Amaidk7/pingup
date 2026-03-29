@@ -44,6 +44,11 @@ const Feed = () => {
     setLoading(false);
   };
 
+  // post delete hone par list se remove karo
+  const handlePostDelete = (postId) => {
+    setFeeds((prev) => prev.filter((post) => post._id !== postId));
+  };
+
   useEffect(() => {
 
     fetchFeeds();
@@ -74,7 +79,7 @@ const Feed = () => {
             </div>
           ) : (
             feeds?.map((post) => (
-              <PostCard key={post._id} post={post} />
+              <PostCard key={post._id} post={post} onDelete={handlePostDelete} />
             ))
           )}
         </div>

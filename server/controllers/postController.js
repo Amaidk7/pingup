@@ -158,3 +158,46 @@ export const likePost = async (req, res) => {
     });
   }
 };
+
+
+
+// delete post
+
+export const deletePost = async (req, res) => {
+  try {
+
+    const { userId } = req.auth();
+    const { postId } = req.params;
+
+    const post = await Post.findById(postId);
+
+    if (!post) {
+      return res.json({
+        success: false,
+        message: "Post not found",
+      });
+    }
+
+    // sirf post owner hi delete kar sakta hai
+    if (post.user.toString() !== userId) {
+      return res.json({
+        success: false,
+        message: "Unauthorized: You can only delete your own posts",
+      });
+    }
+
+    await Post.findByIdAndDelete(postId);
+
+    res.json({
+      success: true,
+      message: "Post deleted successfully",
+    });
+
+  } catch (error) {
+    console.log(error);
+    res.json({
+      success: false,
+      message: error.message,
+    });
+  }
+};

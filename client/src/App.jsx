@@ -8,6 +8,8 @@ import Connections from "./pages/Connections";
 import Discover from "./pages/Discover";
 import Profile from "./pages/Profile";
 import CreatePost from "./pages/CreatePost";
+import Reels from "./pages/Reels";
+import CreateReel from "./pages/CreateReel";
 import { useUser, useAuth } from "@clerk/clerk-react";
 import Layout from "./pages/Layout";
 import toast, { Toaster } from "react-hot-toast";
@@ -40,11 +42,13 @@ const App = () => {
 
   useEffect(() => {
     if (user) {
+
       const eventSource = new EventSource(
-        import.meta.env.VITE_BASEURL + "/api/message/" + user.id,
+        import.meta.env.VITE_BASEURL + "/api/message/" + user.id
       );
 
       eventSource.onmessage = (event) => {
+
         let message;
 
         try {
@@ -94,6 +98,8 @@ const App = () => {
           <Route path="profile" element={<Profile />} />
           <Route path="profile/:profileId" element={<Profile />} />
           <Route path="create-post" element={<CreatePost />} />
+          <Route path="reels" element={<Reels />} />
+          <Route path="create-reel" element={<CreateReel />} />
         </Route>
       </Routes>
     </>
