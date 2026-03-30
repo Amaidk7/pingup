@@ -64,15 +64,10 @@ export const sendMessage = async (req, res) => {
       message_type,
     });
 
-    res.json({
-      success: true,
-      message,
-    });
+    res.json({ success: true, message });
 
     // populate sender info
-    const messageWithUserData = await Message.findById(message._id).populate(
-      "from_user_id"
-    );
+    const messageWithUserData = await Message.findById(message._id).populate("from_user_id");
 
     // send realtime message if receiver connected
     if (connections[to_user_id]) {
@@ -83,10 +78,41 @@ export const sendMessage = async (req, res) => {
 
   } catch (error) {
     console.log(error);
-    res.json({
-      success: false,
-      message: error.message,
-    });
+    res.json({ success: false, message: error.message });
+  }
+};
+
+// delete message
+export const deleteMessage = async (req, res) => {
+  try {
+    const { userId } = req.auth();
+    const { messageId } = req.params;
+
+    const message = await Message.findById(messageId);
+
+    if (!message) {
+      return res.json({ success: false, message: "Message not found" });
+    }
+
+    // sirf sender hi delete kar sakta hai
+    if (message.from_user_id.toString() !== userId) {
+      return res.json({ success: false, message: "Unauthorized: You can only delete your own messages" });
+    }
+
+    await Message.findByIdAndDelete(messageId);
+
+    // receiver ko bhi real-time notify karo ki message delete hua
+    if (connections[message.to_user_id]) {
+      connections[message.to_user_id].write(
+        `data: ${JSON.stringify({ type: "delete", messageId })}\n\n`
+      );
+    }
+
+    res.json({ success: true, message: "Message deleted successfully", messageId });
+
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: error.message });
   }
 };
 
@@ -105,23 +131,14 @@ export const getChatMessages = async (req, res) => {
 
     // mark messages as seen
     await Message.updateMany(
-      {
-        from_user_id: to_user_id,
-        to_user_id: userId,
-      },
+      { from_user_id: to_user_id, to_user_id: userId },
       { seen: true }
     );
 
-    res.json({
-      success: true,
-      messages,
-    });
+    res.json({ success: true, messages });
 
   } catch (error) {
-    res.json({
-      success: false,
-      message: error.message,
-    });
+    res.json({ success: false, message: error.message });
   }
 };
 
@@ -130,21 +147,13 @@ export const getUserRecentMessages = async (req, res) => {
   try {
     const { userId } = req.auth();
 
-    const messages = await Message.find({
-      to_user_id: userId,
-    })
+    const messages = await Message.find({ to_user_id: userId })
       .populate("from_user_id to_user_id")
       .sort({ createdAt: -1 });
 
-    res.json({
-      success: true,
-      messages,
-    });
+    res.json({ success: true, messages });
 
   } catch (error) {
-    res.json({
-      success: false,
-      message: error.message,
-    });
+    res.json({ success: false, message: error.message });
   }
 };

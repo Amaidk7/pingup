@@ -1,14 +1,14 @@
 import React, { useEffect, useRef, useState } from "react";
-import { ImageIcon, SendHorizonal, X } from "lucide-react";
+import { ImageIcon, SendHorizonal, Trash2, X } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
 import { useAuth, useUser } from "@clerk/clerk-react";
 import api from "../api/axios";
-import { addMessage, fetchMessages, resetMessages } from "../features/messages/messagesSlice";
+import { addMessage, removeMessage, fetchMessages, resetMessages } from "../features/messages/messagesSlice";
 import toast from "react-hot-toast";
 import { useTheme } from "../context/ThemeContext";
 
-const POLL_INTERVAL = 3000; // 3 seconds
+const POLL_INTERVAL = 3000;
 
 const ChatBox = () => {
   const { messages } = useSelector((state) => state.messages);
@@ -22,11 +22,13 @@ const ChatBox = () => {
   const [text, setText] = useState("");
   const [image, setImage] = useState(null);
   const [user, setUser] = useState(null);
+  const [hoveredMsg, setHoveredMsg] = useState(null);
+
   const messagesEndRef = useRef(null);
   const pollRef = useRef(null);
   const lastMessageIdRef = useRef(null);
 
-  // ── fetch all messages on load ──
+  // ── fetch messages ──
   const fetchUserMessages = async () => {
     try {
       const token = await getToken();
@@ -40,7 +42,6 @@ const ChatBox = () => {
   const sendMessage = async () => {
     try {
       if (!text && !image) return;
-
       const formData = new FormData();
       formData.append("to_user_id", userId);
       formData.append("text", text);
@@ -62,7 +63,26 @@ const ChatBox = () => {
     }
   };
 
-  // ── SSE: listen for incoming messages ──
+  // ── delete message ──
+  const handleDeleteMessage = async (messageId) => {
+    try {
+      const token = await getToken();
+      const { data } = await api.delete(`/api/message/delete/${messageId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (data.success) {
+        dispatch(removeMessage(messageId));
+        toast.success("Message deleted");
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+
+  // ── SSE: incoming messages + delete events ──
   useEffect(() => {
     if (!clerkUser) return;
 
@@ -71,21 +91,27 @@ const ChatBox = () => {
     );
 
     es.onmessage = (event) => {
-      let message;
-      try { message = JSON.parse(event.data); } catch { return; }
+      let data;
+      try { data = JSON.parse(event.data); } catch { return; }
 
-      const senderId = message?.from_user_id?._id || message?.from_user_id;
+      // delete event
+      if (data?.type === "delete") {
+        dispatch(removeMessage(data.messageId));
+        return;
+      }
+
+      // new message event
+      const senderId = data?.from_user_id?._id || data?.from_user_id;
       if (senderId === userId) {
-        dispatch(addMessage(message));
+        dispatch(addMessage(data));
       }
     };
 
     es.onerror = () => { es.close(); };
-
     return () => { es.close(); };
   }, [clerkUser, userId, dispatch]);
 
-  // ── Polling: re-fetch messages every 3s as fallback ──
+  // ── Polling fallback ──
   useEffect(() => {
     if (!userId) return;
 
@@ -97,11 +123,8 @@ const ChatBox = () => {
           { to_user_id: userId },
           { headers: { Authorization: `Bearer ${token}` } }
         );
-
         if (data.success && data.messages?.length > 0) {
           const latest = data.messages[data.messages.length - 1];
-
-          // sirf naye messages add karo — duplicate avoid karo
           if (latest._id !== lastMessageIdRef.current) {
             lastMessageIdRef.current = latest._id;
             dispatch(fetchMessages({ token, userId }));
@@ -111,11 +134,10 @@ const ChatBox = () => {
     };
 
     pollRef.current = setInterval(poll, POLL_INTERVAL);
-
     return () => clearInterval(pollRef.current);
   }, [userId, getToken, dispatch]);
 
-  // ── initial load ──
+  // ── initial load + reset ──
   useEffect(() => {
     fetchUserMessages();
     return () => {
@@ -124,7 +146,7 @@ const ChatBox = () => {
     };
   }, [userId]);
 
-  // ── find chat user from connections ──
+  // ── find chat user ──
   useEffect(() => {
     if (connections?.length > 0) {
       const foundUser = connections.find((c) => c._id === userId);
@@ -132,7 +154,7 @@ const ChatBox = () => {
     }
   }, [connections, userId]);
 
-  // ── auto scroll to bottom ──
+  // ── auto scroll ──
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -141,6 +163,10 @@ const ChatBox = () => {
     user?.profile_picture && user.profile_picture !== ""
       ? user.profile_picture
       : `https://ui-avatars.com/api/?name=${user?.full_name}`;
+
+  const sortedMessages = [...messages].sort(
+    (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
+  );
 
   return (
     <div className={`flex flex-col h-screen ${isDark ? "bg-black" : "bg-slate-50"}`}>
@@ -171,30 +197,56 @@ const ChatBox = () => {
       {/* Messages */}
       <div className="flex-1 overflow-y-auto no-scrollbar px-5 md:px-8 py-6">
         <div className="space-y-3 max-w-2xl mx-auto">
-          {[...messages]
-            .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
-            .map((message, index) => {
-              const isSent = message.to_user_id !== userId;
-              return (
-                <div key={message._id || index}
-                  className={`flex ${isSent ? "justify-start" : "justify-end"}`}>
-                  <div className={`max-w-xs md:max-w-sm px-4 py-2.5 rounded-2xl text-sm ${
-                    isSent
-                      ? isDark
-                        ? "bg-zinc-900 text-white/80 rounded-bl-sm border border-white/5"
-                        : "bg-white text-slate-800 rounded-bl-sm border border-slate-100 shadow-sm"
-                      : isDark
-                        ? "bg-sky-500 text-black rounded-br-sm"
-                        : "bg-slate-900 text-white rounded-br-sm"
-                  }`}>
-                    {message.message_type === "image" && (
-                      <img src={message.media_url} className="w-full rounded-xl mb-2" alt="" />
-                    )}
-                    {message.text && <p className="leading-relaxed">{message.text}</p>}
-                  </div>
+          {sortedMessages.map((message, index) => {
+            const isSent = message.to_user_id !== userId;
+            const isHovered = hoveredMsg === message._id;
+
+            return (
+              <div
+                key={message._id || index}
+                className={`flex items-end gap-2 ${isSent ? "justify-start" : "justify-end"}`}
+                onMouseEnter={() => setHoveredMsg(message._id)}
+                onMouseLeave={() => setHoveredMsg(null)}
+              >
+
+                {/* Delete button — left side for sent messages */}
+                {isSent && isHovered && (
+                  <button
+                    onClick={() => handleDeleteMessage(message._id)}
+                    className="w-6 h-6 flex items-center justify-center rounded-full bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 transition cursor-pointer shrink-0 mb-0.5"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                )}
+
+                <div className={`max-w-xs md:max-w-sm px-4 py-2.5 rounded-2xl text-sm ${
+                  isSent
+                    ? isDark
+                      ? "bg-zinc-900 text-white/80 rounded-bl-sm border border-white/5"
+                      : "bg-white text-slate-800 rounded-bl-sm border border-slate-100 shadow-sm"
+                    : isDark
+                      ? "bg-sky-500 text-black rounded-br-sm"
+                      : "bg-slate-900 text-white rounded-br-sm"
+                }`}>
+                  {message.message_type === "image" && (
+                    <img src={message.media_url} className="w-full rounded-xl mb-2" alt="" />
+                  )}
+                  {message.text && <p className="leading-relaxed">{message.text}</p>}
                 </div>
-              );
-            })}
+
+                {/* Delete button — right side for received messages */}
+                {!isSent && isHovered && (
+                  <button
+                    onClick={() => handleDeleteMessage(message._id)}
+                    className="w-6 h-6 flex items-center justify-center rounded-full bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 transition cursor-pointer shrink-0 mb-0.5"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                )}
+
+              </div>
+            );
+          })}
           <div ref={messagesEndRef} />
         </div>
       </div>
