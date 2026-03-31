@@ -5,19 +5,15 @@ import Post from "../models/Post.js";
 import User from "../models/User.js";
 import fs from "fs";
 import { clerkClient } from "@clerk/clerk-sdk-node";
-// Get User Data using userId
 
+// Get User Data using userId
 export const getUserData = async (req, res) => {
   try {
-
     const { userId } = req.auth();
-
     let user = await User.findById(userId);
 
     if (!user) {
-
       const clerkUser = await clerkClient.users.getUser(userId);
-
       const email = clerkUser.emailAddresses[0].emailAddress;
       const fullName = `${clerkUser.firstName || ""} ${clerkUser.lastName || ""}`;
 
@@ -28,18 +24,16 @@ export const getUserData = async (req, res) => {
         username: clerkUser.username || email.split("@")[0],
         profile_picture: clerkUser.imageUrl || "",
       });
-
     }
 
     res.json({ success: true, user });
-
   } catch (error) {
     console.log(error);
     res.json({ success: false, message: error.message });
   }
 };
-// Update user Data
 
+// Update user Data
 export const updateUserData = async (req, res) => {
   try {
     const { userId } = req.auth();
@@ -55,79 +49,44 @@ export const updateUserData = async (req, res) => {
 
     if (tempUser.username !== username) {
       const user = await User.findOne({ username });
-
-      if (user) {
-        username = tempUser.username;
-      }
+      if (user) username = tempUser.username;
     }
 
-    const updatedData = {
-      username,
-      bio,
-      location,
-      full_name,
-    };
+    const updatedData = { username, bio, location, full_name };
 
     const profile = req.files?.profile && req.files.profile[0];
     const cover = req.files?.cover && req.files.cover[0];
 
     if (profile) {
       const buffer = fs.readFileSync(profile.path);
-
-      const response = await imagekit.upload({
-        file: buffer,
-        fileName: profile.originalname,
-      });
-
+      const response = await imagekit.upload({ file: buffer, fileName: profile.originalname });
       const url = imagekit.url({
         path: response.filePath,
-        transformation: [
-          { quality: "auto" },
-          { format: "webp" },
-          { width: "512" },
-        ],
+        transformation: [{ quality: "auto" }, { format: "webp" }, { width: "512" }],
       });
-
       updatedData.profile_picture = url;
     }
 
     if (cover) {
       const buffer = fs.readFileSync(cover.path);
-
-      const response = await imagekit.upload({
-        file: buffer,
-        fileName: cover.originalname,
-      });
-
+      const response = await imagekit.upload({ file: buffer, fileName: cover.originalname });
       const url = imagekit.url({
         path: response.filePath,
-        transformation: [
-          { quality: "auto" },
-          { format: "webp" },
-          { width: "1280" },
-        ],
+        transformation: [{ quality: "auto" }, { format: "webp" }, { width: "1280" }],
       });
-
       updatedData.cover_photo = url;
     }
 
-    const user = await User.findByIdAndUpdate(userId, updatedData, {
-      new: true,
-    });
+    const user = await User.findByIdAndUpdate(userId, updatedData, { new: true });
 
-    res.json({
-      success: true,
-      user,
-      message: "Profile updated successfully",
-    });
+    res.json({ success: true, user, message: "Profile updated successfully" });
   } catch (error) {
     console.log(error);
     res.json({ success: false, message: error.message });
   }
 };
 
-// find users using username ,email,location,name
-
+// find users
 export const discoversUsers = async (req, res) => {
   try {
     const { userId } = req.auth();
@@ -142,9 +101,7 @@ export const discoversUsers = async (req, res) => {
       ],
     });
 
-    const filteredUsers = allUsers.filter(
-      (user) => user._id.toString() !== userId,
-    );
+    const filteredUsers = allUsers.filter((user) => user._id.toString() !== userId);
 
     res.json({ success: true, users: filteredUsers });
   } catch (error) {
@@ -153,29 +110,33 @@ export const discoversUsers = async (req, res) => {
   }
 };
 
-// follow user
-
+// ✅ FIXED: follow user
 export const followUser = async (req, res) => {
   try {
     const { userId } = req.auth();
     const { id } = req.body;
 
-    const user = await User.findById(userId);
-
-    if (user.following.includes(id)) {
-      return res.json({
-        success: false,
-        message: "You already following this user",
-      });
+    if (userId === id) {
+      return res.json({ success: false, message: "You cannot follow yourself" });
     }
 
-    user.following.push(id);
-    await user.save();
-
+    const user = await User.findById(userId);
     const toUser = await User.findById(id);
 
-    toUser.followers.push(userId);
-    await toUser.save();
+    if (!user || !toUser) {
+      return res.json({ success: false, message: "User not found" });
+    }
+
+    // ✅ String comparison fix — .toString() use karo
+    const alreadyFollowing = user.following.some((f) => f.toString() === id.toString());
+
+    if (alreadyFollowing) {
+      return res.json({ success: false, message: "You are already following this user" });
+    }
+
+    // ✅ $addToSet use karo — duplicate kabhi nahi aayega
+    await User.findByIdAndUpdate(userId, { $addToSet: { following: id } });
+    await User.findByIdAndUpdate(id, { $addToSet: { followers: userId } });
 
     res.json({ success: true, message: "User followed successfully" });
   } catch (error) {
@@ -184,26 +145,15 @@ export const followUser = async (req, res) => {
   }
 };
 
-// unfollow user
-
+// ✅ FIXED: unfollow user
 export const unfollowUser = async (req, res) => {
   try {
     const { userId } = req.auth();
     const { id } = req.body;
 
-    const user = await User.findById(userId);
-
-    user.following = user.following.filter((user) => user.toString() !== id);
-
-    await user.save();
-
-    const toUser = await User.findById(id);
-
-    toUser.followers = toUser.followers.filter(
-      (user) => user.toString() !== userId,
-    );
-
-    await toUser.save();
+    // ✅ $pull use karo — cleaner aur reliable
+    await User.findByIdAndUpdate(userId, { $pull: { following: id } });
+    await User.findByIdAndUpdate(id, { $pull: { followers: userId } });
 
     res.json({ success: true, message: "User unfollowed successfully" });
   } catch (error) {
@@ -213,7 +163,6 @@ export const unfollowUser = async (req, res) => {
 };
 
 // send connection request
-
 export const sendConnectionRequest = async (req, res) => {
   try {
     const { userId } = req.auth();
@@ -229,8 +178,7 @@ export const sendConnectionRequest = async (req, res) => {
     if (connectionRequests.length >= 20) {
       return res.json({
         success: false,
-        message:
-          "You have sent more than 20 connection requests in the last 24 hours. Please try again later.",
+        message: "You have sent more than 20 connection requests in the last 24 hours.",
       });
     }
 
@@ -252,21 +200,15 @@ export const sendConnectionRequest = async (req, res) => {
         data: { connectionId: newConnection._id },
       });
 
-      return res.json({
-        success: true,
-        message: "Connection request sent successfully",
-      });
-    } else if (connection && connection.status === "accepted") {
-      return res.json({
-        success: false,
-        message: "You are already connected with this user",
-      });
+      return res.json({ success: true, message: "Connection request sent successfully" });
+
+    } else if (connection.status === "accepted") {
+      return res.json({ success: false, message: "You are already connected with this user" });
     }
 
     return res.json({
       success: false,
-      message:
-        "Connection request already sent. Please wait for the user to accept your request.",
+      message: "Connection request already sent. Please wait for the user to accept.",
     });
   } catch (error) {
     console.log(error);
@@ -275,14 +217,11 @@ export const sendConnectionRequest = async (req, res) => {
 };
 
 // get user connections
-
 export const getUserConnections = async (req, res) => {
   try {
     const { userId } = req.auth();
 
-    const user = await User.findById(userId).populate(
-      "connections followers following",
-    );
+    const user = await User.findById(userId).populate("connections followers following");
 
     const connections = user.connections;
     const followers = user.followers;
@@ -295,21 +234,14 @@ export const getUserConnections = async (req, res) => {
       }).populate("from_user_id")
     ).map((connection) => connection.from_user_id);
 
-    res.json({
-      success: true,
-      connections,
-      pendingConnections,
-      followers,
-      following,
-    });
+    res.json({ success: true, connections, pendingConnections, followers, following });
   } catch (error) {
     console.log(error);
     res.json({ success: false, message: error.message });
   }
 };
 
-// accept connection request
-
+// ✅ FIXED: accept connection request
 export const acceptConnectionRequest = async (req, res) => {
   try {
     const { userId } = req.auth();
@@ -318,30 +250,21 @@ export const acceptConnectionRequest = async (req, res) => {
     const connection = await Connection.findOne({
       from_user_id: id,
       to_user_id: userId,
+      status: "pending",
     });
 
     if (!connection) {
-      return res.json({
-        success: false,
-        message: "Connection request not found",
-      });
+      return res.json({ success: false, message: "Connection request not found" });
     }
 
-    const user = await User.findById(userId);
-    user.connections.push(id);
-    await user.save();
-
-    const toUser = await User.findById(id);
-    toUser.connections.push(userId);
-    await toUser.save();
+    // ✅ $addToSet — duplicate connections kabhi nahi banenga
+    await User.findByIdAndUpdate(userId, { $addToSet: { connections: id } });
+    await User.findByIdAndUpdate(id, { $addToSet: { connections: userId } });
 
     connection.status = "accepted";
     await connection.save();
 
-    res.json({
-      success: true,
-      message: "Connection request accepted successfully",
-    });
+    res.json({ success: true, message: "Connection request accepted successfully" });
   } catch (error) {
     console.log(error);
     res.json({ success: false, message: error.message });
@@ -349,7 +272,6 @@ export const acceptConnectionRequest = async (req, res) => {
 };
 
 // get user profiles
-
 export const getUserProfiles = async (req, res) => {
   try {
     const { profileId } = req.body;
