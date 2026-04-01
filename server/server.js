@@ -18,13 +18,8 @@ const app = express();
 
 await connectDB();
 app.use(express.json());
-app.use(cors({
-  origin: "https://ping-up-pied.vercel.app",
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  credentials: true
-}));
+app.use(cors());
 
-app.options("*", cors()); // ✅ IMPORTANT
 app.use(clerkMiddleware());
 
 app.get("/", (req, res) => {
