@@ -1,9 +1,19 @@
 import React, { useEffect, useState } from "react";
-import { BadgeCheck, X } from "lucide-react";
+import { BadgeCheck, X, Trash2 } from "lucide-react";
+import { useAuth } from "@clerk/clerk-react";
+import { useSelector } from "react-redux";
+import api from "../api/axios";
+import toast from "react-hot-toast";
 
 // StoryViewer is always fullscreen dark — no theme toggle needed
-const StoryViewer = ({ viewStory, setViewStory }) => {
+const StoryViewer = ({ viewStory, setViewStory, onDelete }) => {
   const [progress, setProgress] = useState(0);
+  const [deleting, setDeleting] = useState(false);
+
+  const { getToken } = useAuth();
+  const currentUser = useSelector((state) => state.user.value);
+
+  const isOwner = currentUser?._id === viewStory?.user?._id;
 
   useEffect(() => {
     let timer, progressInterval;
@@ -19,6 +29,27 @@ const StoryViewer = ({ viewStory, setViewStory }) => {
   }, [viewStory, setViewStory]);
 
   if (!viewStory) return null;
+
+  const handleDelete = async () => {
+    if (!window.confirm("Delete this story?")) return;
+    try {
+      setDeleting(true);
+      const token = await getToken();
+      const { data } = await api.delete(`/api/story/delete/${viewStory._id}`,
+        { headers: { Authorization: `Bearer ${token}` } });
+      if (data.success) {
+        toast.success("Story deleted");
+        setViewStory(null);
+        if (onDelete) onDelete(viewStory._id); // ✅ StoriesBar se bhi remove karo
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   const renderContent = () => {
     switch (viewStory.media_type) {
@@ -44,6 +75,14 @@ const StoryViewer = ({ viewStory, setViewStory }) => {
           <BadgeCheck className="w-4 h-4 text-sky-400" />
         </div>
       </div>
+
+      {/* ✅ Delete button — sirf owner ko dikhega */}
+      {isOwner && (
+        <button onClick={handleDelete} disabled={deleting}
+          className="absolute top-4 right-16 w-9 h-9 flex items-center justify-center rounded-full bg-white/10 hover:bg-rose-500/30 text-white hover:text-rose-400 transition cursor-pointer">
+          <Trash2 className="w-4 h-4" />
+        </button>
+      )}
 
       <button onClick={() => setViewStory(null)}
         className="absolute top-4 right-4 w-9 h-9 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition cursor-pointer">

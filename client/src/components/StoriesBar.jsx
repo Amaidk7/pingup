@@ -26,6 +26,11 @@ const StoriesBar = () => {
     } catch (error) { toast.error(error.message); }
   };
 
+  // ✅ delete hone par list se turant remove karo
+  const handleStoryDelete = (storyId) => {
+    setStories((prev) => prev.filter((s) => s._id !== storyId));
+  };
+
   useEffect(() => { fetchStories(); }, []);
 
   return (
@@ -86,7 +91,8 @@ const StoriesBar = () => {
       </div>
 
       {showModal && <StoryModal setShowModal={setShowModal} fetchStories={fetchStories} />}
-      {viewStory && <StoryViewer viewStory={viewStory} setViewStory={setViewStory} />}
+      {/* ✅ onDelete prop pass karo */}
+      {viewStory && <StoryViewer viewStory={viewStory} setViewStory={setViewStory} onDelete={handleStoryDelete} />}
     </div>
   );
 };
