@@ -86,19 +86,21 @@ export const discoversUsers = async (req, res) => {
     const { userId } = req.auth();
     const { input } = req.body;
 
+    if (!input || input.trim() === "") {
+      return res.json({ success: true, users: [] });
+    }
+
     const allUsers = await User.find({
       $or: [
-        { username: new RegExp(input, "i") },
-        { email: new RegExp(input, "i") },
+        { username: new RegExp(`^${input}`, "i") },  // starts with
+        { full_name: new RegExp(`^${input}`, "i") }, // starts with
         { location: new RegExp(input, "i") },
-        { full_name: new RegExp(input, "i") },
       ],
     });
 
     const filteredUsers = allUsers.filter((u) => u._id.toString() !== userId);
     res.json({ success: true, users: filteredUsers });
   } catch (error) {
-    console.log(error);
     res.json({ success: false, message: error.message });
   }
 };

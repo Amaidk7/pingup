@@ -10,6 +10,9 @@ import { useTheme } from "../context/ThemeContext";
 
 const Connections = () => {
   const [currentTab, setCurrentTab] = useState("Followers");
+  // ✅ local pending list — turant UI update ke liye
+  const [localPending, setLocalPending] = useState([]);
+
   const navigate = useNavigate();
   const { getToken } = useAuth();
   const dispatch = useDispatch();
@@ -17,10 +20,15 @@ const Connections = () => {
 
   const { connections, pendingConnections, followers, following } = useSelector((state) => state.connections);
 
+  // ✅ jab bhi redux se pendingConnections update ho, local state sync karo
+  useEffect(() => {
+    setLocalPending(pendingConnections);
+  }, [pendingConnections]);
+
   const dataArray = [
     { label: "Followers", value: followers, icon: Users },
     { label: "Following", value: following, icon: UserCheck },
-    { label: "Pending", value: pendingConnections, icon: UserRoundPen },
+    { label: "Pending", value: localPending, icon: UserRoundPen },
     { label: "Connections", value: connections, icon: UserPlus },
   ];
 
@@ -35,11 +43,25 @@ const Connections = () => {
 
   const acceptConnection = async (userId) => {
     try {
+      // ✅ pehle locally remove karo — instant UI update
+      setLocalPending((prev) => prev.filter((u) => u._id !== userId));
+
       const { data } = await api.post("/api/user/accept", { id: userId },
         { headers: { Authorization: `Bearer ${await getToken()}` } });
-      if (data.success) { toast.success(data.message); dispatch(fetchConnections(await getToken())); }
-      else toast(data.message);
-    } catch (error) { toast.error(error.message); }
+
+      if (data.success) {
+        toast.success(data.message);
+        // ✅ phir redux bhi sync karo
+        dispatch(fetchConnections(await getToken()));
+      } else {
+        // ✅ agar API fail ho to wapas add karo
+        setLocalPending(pendingConnections);
+        toast(data.message);
+      }
+    } catch (error) {
+      setLocalPending(pendingConnections);
+      toast.error(error.message);
+    }
   };
 
   useEffect(() => {
