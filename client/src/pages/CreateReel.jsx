@@ -115,7 +115,7 @@ const CreateReel = () => {
   };
 
   return (
-    <div className={`h-full overflow-y-auto no-scrollbar ${isDark ? "bg-black" : "bg-slate-50"}`}>
+    <div className={`h-full overflow-y-auto no-scrollbar bg-transparent`}>
       <div className="max-w-lg mx-auto px-6 py-8">
 
         <div className="mb-8">

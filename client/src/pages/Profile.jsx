@@ -42,7 +42,7 @@ const Profile = () => {
   const tabs = ["posts", "media", "likes"];
 
   return user ? (
-    <div className={`relative h-full overflow-y-scroll no-scrollbar ${isDark ? "bg-black" : "bg-slate-50"}`}>
+    <div className={`relative h-full overflow-y-scroll no-scrollbar bg-transparent`}>
       <div className="max-w-2xl mx-auto pb-10 px-4 sm:px-6">
 
         {/* Profile Card */}

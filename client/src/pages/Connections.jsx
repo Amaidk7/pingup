@@ -74,7 +74,7 @@ const Connections = () => {
   const inactiveBtn = isDark ? "bg-zinc-900 border-white/5 text-white hover:border-white/10" : "bg-white border-slate-100 text-slate-600 hover:border-slate-300 shadow-sm";
 
   return (
-    <div className={`h-full overflow-y-auto no-scrollbar ${isDark ? "bg-black" : "bg-slate-50"}`}>
+    <div className={`h-full overflow-y-auto no-scrollbar bg-transparent`}>
       <div className="max-w-4xl mx-auto px-6 py-8">
         <div className="mb-8">
           <h1 className={`text-2xl font-bold tracking-tight ${isDark ? "text-white" : "text-slate-900"}`}>Connections</h1>

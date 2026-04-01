@@ -44,7 +44,7 @@ const Discover = () => {
   }, [dispatch, getToken]);
 
   return (
-    <div className={`h-full overflow-y-auto no-scrollbar ${isDark ? "bg-black" : "bg-slate-50"}`}>
+    <div className={`h-full overflow-y-auto no-scrollbar bg-transparent`}>
       <div className="max-w-5xl mx-auto px-6 py-8">
         <div className="mb-8">
           <h1 className={`text-2xl font-bold tracking-tight ${isDark ? "text-white" : "text-slate-900"}`}>Discover People</h1>

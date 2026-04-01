@@ -169,7 +169,7 @@ const ChatBox = () => {
   );
 
   return (
-    <div className={`flex flex-col h-screen ${isDark ? "bg-black" : "bg-slate-50"}`}>
+    <div className={`flex flex-col h-screen bg-transparent`}>
 
       {/* Header */}
       {user && (
