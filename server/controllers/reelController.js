@@ -1,29 +1,26 @@
-import fs from "fs";
 import imagekit from "../configs/imageKit.js";
 import Reel from "../models/Reel.js";
 import User from "../models/User.js";
 
-// add reel
+// ✅ ImageKit auth params — frontend directly upload karega
+export const getImageKitAuth = (req, res) => {
+  try {
+    const authParams = imagekit.getAuthenticationParameters();
+    res.json({ ...authParams, publicKey: process.env.IMAGEKIT_PUBLIC_KEY });
+  } catch (error) {
+    res.json({ success: false, message: error.message });
+  }
+};
 
+// ✅ add reel — ab sirf URL save karega, file nahi aayegi
 export const addReel = async (req, res) => {
   try {
     const { userId } = req.auth();
-    const { caption } = req.body;
-    const video = req.file;
+    const { caption, video_url } = req.body;
 
-    if (!video) {
-      return res.json({ success: false, message: "Video is required" });
+    if (!video_url) {
+      return res.json({ success: false, message: "Video URL is required" });
     }
-
-    // upload video to imagekit
-    const fileBuffer = fs.readFileSync(video.path);
-    const response = await imagekit.upload({
-      file: fileBuffer,
-      fileName: video.originalname,
-      folder: "reels",
-    });
-
-    const video_url = response.url;
 
     await Reel.create({
       user: userId,
@@ -40,7 +37,6 @@ export const addReel = async (req, res) => {
 };
 
 // get reels feed
-
 export const getReels = async (req, res) => {
   try {
     const { userId } = req.auth();
@@ -65,7 +61,6 @@ export const getReels = async (req, res) => {
 };
 
 // like reel
-
 export const likeReel = async (req, res) => {
   try {
     const { userId } = req.auth();
@@ -78,19 +73,13 @@ export const likeReel = async (req, res) => {
     }
 
     if (reel.likes_count.includes(userId)) {
-
       reel.likes_count = reel.likes_count.filter((id) => id !== userId);
       await reel.save();
-
       return res.json({ success: true, message: "Reel unliked" });
-
     } else {
-
       reel.likes_count.push(userId);
       await reel.save();
-
       return res.json({ success: true, message: "Reel liked" });
-
     }
 
   } catch (error) {
@@ -100,7 +89,6 @@ export const likeReel = async (req, res) => {
 };
 
 // delete reel
-
 export const deleteReel = async (req, res) => {
   try {
     const { userId } = req.auth();
@@ -117,7 +105,6 @@ export const deleteReel = async (req, res) => {
     }
 
     await Reel.findByIdAndDelete(reelId);
-
     res.json({ success: true, message: "Reel deleted successfully" });
 
   } catch (error) {
@@ -125,3 +112,4 @@ export const deleteReel = async (req, res) => {
     res.json({ success: false, message: error.message });
   }
 };
+

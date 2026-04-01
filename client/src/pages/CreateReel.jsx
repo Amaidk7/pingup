@@ -12,6 +12,7 @@ const CreateReel = () => {
   const [previewUrl, setPreviewUrl] = useState(null);
   const [caption, setCaption] = useState("");
   const [loading, setLoading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   const { getToken } = useAuth();
   const user = useSelector((state) => state.user.value);
@@ -38,16 +39,67 @@ const CreateReel = () => {
     videoEl.src = URL.createObjectURL(file);
   };
 
+  // ✅ Step 1: ImageKit se auth params lo backend se
+  const getImageKitAuth = async (token) => {
+    const { data } = await api.get("/api/reel/imagekit-auth", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return data; // { token, expire, signature, publicKey }
+  };
+
+  // ✅ Step 2: Directly ImageKit pe upload karo
+  const uploadToImageKit = async (file, authParams) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("fileName", file.name);
+    formData.append("folder", "reels");
+    formData.append("publicKey", authParams.publicKey);
+    formData.append("signature", authParams.signature);
+    formData.append("expire", authParams.expire);
+    formData.append("token", authParams.token);
+
+    const xhr = new XMLHttpRequest();
+
+    return new Promise((resolve, reject) => {
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          const percent = Math.round((e.loaded / e.total) * 100);
+          setUploadProgress(percent);
+        }
+      };
+      xhr.onload = () => {
+        if (xhr.status === 200) {
+          resolve(JSON.parse(xhr.responseText));
+        } else {
+          reject(new Error("ImageKit upload failed"));
+        }
+      };
+      xhr.onerror = () => reject(new Error("Network error during upload"));
+      xhr.open("POST", "https://upload.imagekit.io/api/v1/files/upload");
+      xhr.send(formData);
+    });
+  };
+
   const handleSubmit = async () => {
     if (!video) return toast.error("Please select a video");
     setLoading(true);
+    setUploadProgress(0);
     try {
-      const formData = new FormData();
-      formData.append("video", video);
-      formData.append("caption", caption);
-      const { data } = await api.post("/api/reel/create", formData, {
-        headers: { Authorization: `Bearer ${await getToken()}` },
-      });
+      const token = await getToken();
+
+      // Step 1: Auth params lo
+      const authParams = await getImageKitAuth(token);
+
+      // Step 2: ImageKit pe directly upload karo
+      const uploadResponse = await uploadToImageKit(video, authParams);
+      const video_url = uploadResponse.url;
+
+      // Step 3: Sirf URL backend ko bhejo
+      const { data } = await api.post("/api/reel/create", 
+        { caption, video_url },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
       if (data.success) {
         toast.success("Reel uploaded!");
         navigate("/reels");
@@ -58,6 +110,7 @@ const CreateReel = () => {
       toast.error(error.message);
     } finally {
       setLoading(false);
+      setUploadProgress(0);
     }
   };
 
@@ -130,6 +183,21 @@ const CreateReel = () => {
               </div>
             )}
 
+            {/* Upload Progress Bar */}
+            {loading && uploadProgress > 0 && (
+              <div className="space-y-1">
+                <div className={`w-full h-1.5 rounded-full ${isDark ? "bg-white/10" : "bg-slate-200"}`}>
+                  <div
+                    className="h-1.5 rounded-full bg-sky-500 transition-all duration-300"
+                    style={{ width: `${uploadProgress}%` }}
+                  />
+                </div>
+                <p className={`text-xs text-right ${isDark ? "text-white/30" : "text-slate-400"}`}>
+                  {uploadProgress === 100 ? "Processing..." : `Uploading ${uploadProgress}%`}
+                </p>
+              </div>
+            )}
+
             {/* Caption */}
             <textarea
               rows={3}
@@ -147,13 +215,7 @@ const CreateReel = () => {
           {/* Submit */}
           <div className="px-5 pb-5">
             <button
-              onClick={() =>
-                toast.promise(handleSubmit(), {
-                  loading: "Uploading reel...",
-                  success: "Reel uploaded!",
-                  error: "Upload failed",
-                })
-              }
+              onClick={handleSubmit}
               disabled={loading || !video}
               className={`w-full py-3 text-sm font-semibold rounded-xl active:scale-95 transition cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed ${
                 isDark
@@ -161,7 +223,11 @@ const CreateReel = () => {
                   : "bg-slate-900 hover:bg-slate-700 text-white"
               }`}
             >
-              Share Reel
+              {loading
+                ? uploadProgress > 0 && uploadProgress < 100
+                  ? `Uploading ${uploadProgress}%`
+                  : "Processing..."
+                : "Share Reel"}
             </button>
           </div>
 
