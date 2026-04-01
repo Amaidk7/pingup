@@ -17,8 +17,21 @@ import reelRouter from "./routes/reelRoutes.js";
 const app = express();
 
 await connectDB();
-app.use(express.json());
-app.use(cors());
+
+// ✅ Fix 1: CORS — frontend URL allow karo
+app.use(cors({
+  origin: [
+    "https://ping-up-pied.vercel.app",
+    "http://localhost:5173",  // local dev ke liye
+  ],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true,
+}));
+
+// ✅ Fix 2: 413 Error — payload size limit badhao (video/reel ke liye)
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
 app.use(clerkMiddleware());
 
