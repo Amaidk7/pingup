@@ -222,7 +222,7 @@ const CreatePost = () => {
           {/* Textarea */}
           <div className="px-5 py-4">
             <textarea
-              className={`w-full resize-none text-sm outline-none min-h-[120px] leading-relaxed bg-transparent ${
+              className={`w-full resize-none text-sm outline-none min-h-30 leading-relaxed bg-transparent ${
                 isDark ? "text-white/80 placeholder-white/20" : "text-slate-700 placeholder-slate-300"
               }`}
               placeholder="What's on your mind?"
