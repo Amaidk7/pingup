@@ -20,6 +20,7 @@ export const addUserStory = async (req, res) => {
         fileName: media.originalname,
       });
       media_url = response.url;
+      fs.unlinkSync(media.path);
     }
 
     const story = await Story.create({

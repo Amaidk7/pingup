@@ -53,6 +53,7 @@ export const sendMessage = async (req, res) => {
           { width: "1280" },
         ],
       });
+      fs.unlinkSync(image.path);
     }
 
     // save message in database

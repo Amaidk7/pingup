@@ -61,6 +61,7 @@ export const updateUserData = async (req, res) => {
         path: response.filePath,
         transformation: [{ quality: "auto" }, { format: "webp" }, { width: "512" }],
       });
+      fs.unlinkSync(profile.path);
     }
 
     if (cover) {
@@ -70,6 +71,7 @@ export const updateUserData = async (req, res) => {
         path: response.filePath,
         transformation: [{ quality: "auto" }, { format: "webp" }, { width: "1280" }],
       });
+      fs.unlinkSync(cover.path);
     }
 
     const user = await User.findByIdAndUpdate(userId, updatedData, { new: true });

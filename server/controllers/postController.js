@@ -34,6 +34,7 @@ export const addPost = async (req, res) => {
               { width: "1280" },
             ],
           });
+          fs.unlinkSync(image.path);
 
           return url;
         })
