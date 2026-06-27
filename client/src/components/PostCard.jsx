@@ -98,7 +98,7 @@ const PostCard = ({ post, onDelete }) => {
         <div className={`grid gap-2 ${post.image_urls.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}>
           {post.image_urls?.map((img, index) => (
             <img src={img || null} key={index}
-              className={`w-full object-cover rounded-xl ${post.image_urls.length === 1 ? "max-h-80" : "h-48"}`} alt="" />
+              className={`w-full rounded-xl ${post.image_urls.length === 1 ? "object-contain max-h-150" : "object-cover h-48"}`} alt="" />
           ))}
         </div>
       )}
