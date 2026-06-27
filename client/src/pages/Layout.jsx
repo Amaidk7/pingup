@@ -69,7 +69,10 @@ const Layout = () => {
       </div>
 
       <div className="relative z-10 flex w-full h-full">
-        <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+        {/* z-30 → sidebar overlay (z-20) ke upar rahega */}
+        <div className="relative z-30">
+          <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+        </div>
 
         <div className="flex-1 overflow-hidden flex flex-col">
           {/* Top Bar */}
@@ -90,10 +93,10 @@ const Layout = () => {
         </div>
       </div>
 
-      {/* Mobile menu toggle */}
+      {/* Mobile menu toggle — z-40 so always on top */}
       <button
         onClick={() => setSidebarOpen((prev) => !prev)}
-        className={`absolute top-2.5 left-3 p-2 z-30 rounded-xl border w-10 h-10 flex items-center justify-center sm:hidden transition ${
+        className={`absolute top-2.5 left-3 p-2 z-40 rounded-xl border w-10 h-10 flex items-center justify-center sm:hidden transition ${
           isDark
             ? "bg-zinc-900 border-white/10 text-white/50"
             : "bg-white border-slate-100 text-slate-500"
@@ -102,9 +105,10 @@ const Layout = () => {
         {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
       </button>
 
+      {/* Overlay — z-20 so sidebar (z-30) ke neeche rahega */}
       {sidebarOpen && (
         <div
-          className={`absolute inset-0 z-10 sm:hidden ${isDark ? "bg-black/60" : "bg-black/20"}`}
+          className={`absolute inset-0 z-20 sm:hidden ${isDark ? "bg-black/60" : "bg-black/20"}`}
           onClick={() => setSidebarOpen(false)}
         />
       )}
