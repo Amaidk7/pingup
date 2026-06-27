@@ -15,7 +15,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
 
   return (
     <div
-      className={`w-60 xl:w-64 flex flex-col justify-between max-sm:absolute top-0 bottom-0 z-20 transition-all duration-300 ease-in-out backdrop-blur-md ${
+      className={`w-60 xl:w-64 flex flex-col justify-between max-sm:absolute top-0 bottom-0 z-50 transition-all duration-300 ease-in-out backdrop-blur-md ${
         sidebarOpen ? "translate-x-0" : "max-sm:-translate-x-full"
       } ${
         isDark

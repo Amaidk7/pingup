@@ -70,9 +70,7 @@ const Layout = () => {
 
       <div className="relative z-10 flex w-full h-full">
         {/* z-30 → sidebar overlay (z-20) ke upar rahega */}
-        <div className="relative z-30">
-          <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
-        </div>
+        <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
         <div className="flex-1 overflow-hidden flex flex-col">
           {/* Top Bar */}
@@ -108,7 +106,7 @@ const Layout = () => {
       {/* Overlay — z-20 so sidebar (z-30) ke neeche rahega */}
       {sidebarOpen && (
         <div
-          className={`absolute inset-0 z-20 sm:hidden ${isDark ? "bg-black/60" : "bg-black/20"}`}
+          className={`absolute inset-0 z-10 sm:hidden ${isDark ? "bg-black/60" : "bg-black/20"}`}
           onClick={() => setSidebarOpen(false)}
         />
       )}
