@@ -59,13 +59,13 @@ const Profile = () => {
           className={`rounded-2xl border overflow-hidden mt-4 ${isDark ? "bg-zinc-900 border-white/5" : "bg-white border-slate-100 shadow-sm"}`}
         >
           <div
-            className={`${isDark ? "bg-zinc-800" : "bg-linear-to-br from-slate-100 via-slate-200 to-slate-100"}`}
+            className={`h-48 md:h-60 overflow-hidden ${isDark ? "bg-zinc-800" : "bg-linear-to-br from-slate-100 via-slate-200 to-slate-100"}`}
           >
             {user.cover_photo && (
               <img
                 src={user.cover_photo}
                 alt=""
-                className={`w-full object-contain max-h-64 ${isDark ? "opacity-80" : ""}`}
+                className={`w-full h-48 md:h-60 object-cover ${isDark ? "opacity-80" : ""}`}
               />
             )}
           </div>
