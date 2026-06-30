@@ -52,16 +52,20 @@ const Layout = () => {
         <div
           className="absolute rounded-full blur-3xl opacity-20 animate-pulse"
           style={{
-            width: "600px", height: "600px",
-            top: "-100px", left: "-100px",
+            width: "600px",
+            height: "600px",
+            top: "-100px",
+            left: "-100px",
             background: isDark ? "#1e3a8a" : "#c7d2fe",
           }}
         />
         <div
           className="absolute rounded-full blur-3xl opacity-10"
           style={{
-            width: "500px", height: "500px",
-            bottom: "-100px", right: "200px",
+            width: "500px",
+            height: "500px",
+            bottom: "-100px",
+            right: "200px",
             background: isDark ? "#0e7490" : "#bfdbfe",
             animation: "pulse 4s ease-in-out infinite 2s",
           }}

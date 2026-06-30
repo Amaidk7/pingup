@@ -29,13 +29,18 @@ const CreateReel = () => {
   const handleVideoSelect = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (!file.type.startsWith("video/")) return toast.error("Please select a video file");
-    if (file.size > 100 * 1024 * 1024) return toast.error("Video must be under 100MB");
+    if (!file.type.startsWith("video/"))
+      return toast.error("Please select a video file");
+    if (file.size > 100 * 1024 * 1024)
+      return toast.error("Video must be under 100MB");
     const videoEl = document.createElement("video");
     videoEl.preload = "metadata";
     videoEl.onloadedmetadata = () => {
       window.URL.revokeObjectURL(videoEl.src);
-      if (videoEl.duration > 60) { toast.error("Video must be under 60 seconds"); return; }
+      if (videoEl.duration > 60) {
+        toast.error("Video must be under 60 seconds");
+        return;
+      }
       setVideo(file);
       setPreviewUrl(URL.createObjectURL(file));
     };
@@ -61,9 +66,13 @@ const CreateReel = () => {
     const xhr = new XMLHttpRequest();
     return new Promise((resolve, reject) => {
       xhr.upload.onprogress = (e) => {
-        if (e.lengthComputable) setUploadProgress(Math.round((e.loaded / e.total) * 100));
+        if (e.lengthComputable)
+          setUploadProgress(Math.round((e.loaded / e.total) * 100));
       };
-      xhr.onload = () => xhr.status === 200 ? resolve(JSON.parse(xhr.responseText)) : reject(new Error("ImageKit upload failed"));
+      xhr.onload = () =>
+        xhr.status === 200
+          ? resolve(JSON.parse(xhr.responseText))
+          : reject(new Error("ImageKit upload failed"));
       xhr.onerror = () => reject(new Error("Network error during upload"));
       xhr.open("POST", "https://upload.imagekit.io/api/v1/files/upload");
       xhr.send(formData);
@@ -79,12 +88,15 @@ const CreateReel = () => {
       const authParams = await getImageKitAuth(token);
       const uploadResponse = await uploadToImageKit(video, authParams);
       const video_url = uploadResponse.url;
-      const { data } = await api.post("/api/reel/create",
+      const { data } = await api.post(
+        "/api/reel/create",
         { caption, video_url },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
-      if (data.success) { toast.success("Reel uploaded!"); navigate("/reels"); }
-      else toast.error(data.message);
+      if (data.success) {
+        toast.success("Reel uploaded!");
+        navigate("/reels");
+      } else toast.error(data.message);
     } catch (error) {
       toast.error(error.message);
     } finally {
@@ -113,13 +125,18 @@ const CreateReel = () => {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
-        }
+        },
       );
       const data = await response.json();
       const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-      const tags = text.trim().split(/\s+/).filter((t) => t.startsWith("#"));
+      const tags = text
+        .trim()
+        .split(/\s+/)
+        .filter((t) => t.startsWith("#"));
       setHashtags(tags.slice(0, 15));
-    } catch (error) { toast.error("Hashtags generate nahi hue. Dobara try karo!"); }
+    } catch (error) {
+      toast.error("Hashtags generate nahi hue. Dobara try karo!");
+    }
     setHashtagLoading(false);
   };
 
@@ -138,47 +155,97 @@ const CreateReel = () => {
   return (
     <div className="h-full overflow-y-auto no-scrollbar bg-transparent">
       <div className="max-w-lg mx-auto px-6 py-8">
-
         <div className="mb-8">
-          <h1 className={`text-2xl font-bold tracking-tight ${isDark ? "text-white" : "text-slate-900"}`}>
+          <h1
+            className={`text-2xl font-bold tracking-tight ${isDark ? "text-white" : "text-slate-900"}`}
+          >
             Create Reel
           </h1>
-          <p className={`text-sm mt-1 ${isDark ? "text-white/30" : "text-slate-400"}`}>
+          <p
+            className={`text-sm mt-1 ${isDark ? "text-white/30" : "text-slate-400"}`}
+          >
             Share a short video with your followers
           </p>
         </div>
 
-        <div className={`rounded-2xl border overflow-hidden ${isDark ? "bg-zinc-900 border-white/5" : "bg-white border-slate-100 shadow-sm"}`}>
-
+        <div
+          className={`rounded-2xl border overflow-hidden ${isDark ? "bg-zinc-900 border-white/5" : "bg-white border-slate-100 shadow-sm"}`}
+        >
           {/* User info */}
-          <div className={`flex items-center gap-3 px-5 pt-5 pb-4 border-b ${isDark ? "border-white/5" : "border-slate-50"}`}>
-            <img src={user?.profile_picture} alt="" className="w-10 h-10 rounded-full object-cover" />
+          <div
+            className={`flex items-center gap-3 px-5 pt-5 pb-4 border-b ${isDark ? "border-white/5" : "border-slate-50"}`}
+          >
+            <img
+              src={user?.profile_picture}
+              alt=""
+              className="w-10 h-10 rounded-full object-cover"
+            />
             <div>
-              <h2 className={`font-semibold text-sm ${isDark ? "text-white" : "text-slate-900"}`}>{user?.full_name}</h2>
-              <p className={`text-xs ${isDark ? "text-white/30" : "text-slate-400"}`}>@{user?.username}</p>
+              <h2
+                className={`font-semibold text-sm ${isDark ? "text-white" : "text-slate-900"}`}
+              >
+                {user?.full_name}
+              </h2>
+              <p
+                className={`text-xs ${isDark ? "text-white/30" : "text-slate-400"}`}
+              >
+                @{user?.username}
+              </p>
             </div>
           </div>
 
           <div className="p-5 space-y-4">
-
             {/* Video Upload */}
             {!previewUrl ? (
-              <label htmlFor="video-upload"
+              <label
+                htmlFor="video-upload"
                 className={`flex flex-col items-center justify-center w-full h-52 border-2 border-dashed rounded-2xl cursor-pointer transition group ${
-                  isDark ? "border-white/10 hover:border-sky-500/30 hover:bg-white/5" : "border-slate-200 hover:border-slate-400 hover:bg-slate-50"
-                }`}>
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-3 transition ${isDark ? "bg-white/5 group-hover:bg-white/10" : "bg-slate-100 group-hover:bg-slate-200"}`}>
-                  <Upload className={`w-5 h-5 ${isDark ? "text-white/30" : "text-slate-400"}`} />
+                  isDark
+                    ? "border-white/10 hover:border-sky-500/30 hover:bg-white/5"
+                    : "border-slate-200 hover:border-slate-400 hover:bg-slate-50"
+                }`}
+              >
+                <div
+                  className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-3 transition ${isDark ? "bg-white/5 group-hover:bg-white/10" : "bg-slate-100 group-hover:bg-slate-200"}`}
+                >
+                  <Upload
+                    className={`w-5 h-5 ${isDark ? "text-white/30" : "text-slate-400"}`}
+                  />
                 </div>
-                <p className={`text-sm font-medium ${isDark ? "text-white/40" : "text-slate-600"}`}>Click to upload video</p>
-                <p className={`text-xs mt-1 ${isDark ? "text-white/20" : "text-slate-400"}`}>Max 60 seconds · Max 100MB</p>
-                <input id="video-upload" type="file" accept="video/*" hidden onChange={handleVideoSelect} />
+                <p
+                  className={`text-sm font-medium ${isDark ? "text-white/40" : "text-slate-600"}`}
+                >
+                  Click to upload video
+                </p>
+                <p
+                  className={`text-xs mt-1 ${isDark ? "text-white/20" : "text-slate-400"}`}
+                >
+                  Max 60 seconds · Max 100MB
+                </p>
+                <input
+                  id="video-upload"
+                  type="file"
+                  accept="video/*"
+                  hidden
+                  onChange={handleVideoSelect}
+                />
               </label>
             ) : (
-              <div className={`relative rounded-2xl overflow-hidden w-full ${isDark ? "bg-zinc-800" : "bg-slate-200"}`}>
-                <video src={previewUrl} className="w-full max-h-64 object-contain" controls />
-                <button onClick={() => { setVideo(null); setPreviewUrl(null); }}
-                  className="absolute top-2 right-2 w-7 h-7 bg-black/70 text-white rounded-full flex items-center justify-center cursor-pointer hover:bg-black/90 transition">
+              <div
+                className={`relative rounded-2xl overflow-hidden w-full ${isDark ? "bg-zinc-800" : "bg-slate-200"}`}
+              >
+                <video
+                  src={previewUrl}
+                  className="w-full max-h-64 object-contain"
+                  controls
+                />
+                <button
+                  onClick={() => {
+                    setVideo(null);
+                    setPreviewUrl(null);
+                  }}
+                  className="absolute top-2 right-2 w-7 h-7 bg-black/70 text-white rounded-full flex items-center justify-center cursor-pointer hover:bg-black/90 transition"
+                >
                   <X className="w-4 h-4" />
                 </button>
               </div>
@@ -187,70 +254,123 @@ const CreateReel = () => {
             {/* Upload Progress Bar */}
             {loading && uploadProgress > 0 && (
               <div className="space-y-1">
-                <div className={`w-full h-1.5 rounded-full ${isDark ? "bg-white/10" : "bg-slate-200"}`}>
-                  <div className="h-1.5 rounded-full bg-sky-500 transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
+                <div
+                  className={`w-full h-1.5 rounded-full ${isDark ? "bg-white/10" : "bg-slate-200"}`}
+                >
+                  <div
+                    className="h-1.5 rounded-full bg-sky-500 transition-all duration-300"
+                    style={{ width: `${uploadProgress}%` }}
+                  />
                 </div>
-                <p className={`text-xs text-right ${isDark ? "text-white/30" : "text-slate-400"}`}>
-                  {uploadProgress === 100 ? "Processing..." : `Uploading ${uploadProgress}%`}
+                <p
+                  className={`text-xs text-right ${isDark ? "text-white/30" : "text-slate-400"}`}
+                >
+                  {uploadProgress === 100
+                    ? "Processing..."
+                    : `Uploading ${uploadProgress}%`}
                 </p>
               </div>
             )}
 
             {/* Caption */}
-            <textarea rows={3}
+            <textarea
+              rows={3}
               className={`w-full px-4 py-3 text-sm rounded-xl focus:outline-none transition resize-none border ${
-                isDark ? "text-white/80 placeholder-white/20 bg-zinc-800 border-white/5 focus:border-sky-500/40" : "text-slate-700 placeholder-slate-300 bg-slate-50 border-slate-200 focus:border-slate-400"
+                isDark
+                  ? "text-white/80 placeholder-white/20 bg-zinc-800 border-white/5 focus:border-sky-500/40"
+                  : "text-slate-700 placeholder-slate-300 bg-slate-50 border-slate-200 focus:border-slate-400"
               }`}
               placeholder="Write a caption or topic..."
-              value={caption} onChange={(e) => setCaption(e.target.value)}
+              value={caption}
+              onChange={(e) => setCaption(e.target.value)}
             />
-
           </div>
 
           {/* ✅ Hashtag Generator — p-5 div ke bahar */}
-          <div className={`mx-5 mb-4 rounded-xl border overflow-hidden ${isDark ? "border-emerald-500/10 bg-emerald-500/5" : "border-emerald-100 bg-emerald-50/50"}`}>
+          <div
+            className={`mx-5 mb-4 rounded-xl border overflow-hidden ${isDark ? "border-emerald-500/10 bg-emerald-500/5" : "border-emerald-100 bg-emerald-50/50"}`}
+          >
             <div className="flex items-center justify-between px-4 py-3">
               <div className="flex items-center gap-2">
-                <Hash className={`w-4 h-4 ${isDark ? "text-emerald-400" : "text-emerald-500"}`} />
-                <span className={`text-xs font-semibold ${isDark ? "text-white/60" : "text-slate-600"}`}>AI Hashtag Generator</span>
+                <Hash
+                  className={`w-4 h-4 ${isDark ? "text-emerald-400" : "text-emerald-500"}`}
+                />
+                <span
+                  className={`text-xs font-semibold ${isDark ? "text-white/60" : "text-slate-600"}`}
+                >
+                  AI Hashtag Generator
+                </span>
               </div>
-              <button onClick={generateHashtags}
+              <button
+                onClick={generateHashtags}
                 className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition active:scale-95 cursor-pointer ${
-                  isDark ? "bg-emerald-500 text-black hover:bg-emerald-400" : "bg-emerald-600 text-white hover:bg-emerald-500"
-                }`}>
-                {hashtagLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Hash className="w-3 h-3" />}
+                  isDark
+                    ? "bg-emerald-500 text-black hover:bg-emerald-400"
+                    : "bg-emerald-600 text-white hover:bg-emerald-500"
+                }`}
+              >
+                {hashtagLoading ? (
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                ) : (
+                  <Hash className="w-3 h-3" />
+                )}
                 {hashtagLoading ? "Generating..." : "Generate"}
               </button>
             </div>
 
             {showHashtags && (
-              <div className={`border-t ${isDark ? "border-emerald-500/10" : "border-emerald-100"}`}>
+              <div
+                className={`border-t ${isDark ? "border-emerald-500/10" : "border-emerald-100"}`}
+              >
                 {hashtagLoading ? (
                   <div className="flex items-center justify-center gap-2 py-6">
-                    <Loader2 className={`w-4 h-4 animate-spin ${isDark ? "text-emerald-400/50" : "text-emerald-300"}`} />
-                    <span className={`text-xs ${isDark ? "text-white/30" : "text-slate-400"}`}>Hashtags dhundh raha hai...</span>
+                    <Loader2
+                      className={`w-4 h-4 animate-spin ${isDark ? "text-emerald-400/50" : "text-emerald-300"}`}
+                    />
+                    <span
+                      className={`text-xs ${isDark ? "text-white/30" : "text-slate-400"}`}
+                    >
+                      Hashtags dhundh raha hai...
+                    </span>
                   </div>
                 ) : (
                   <div className="p-3 space-y-3">
                     <div className="flex flex-wrap gap-1.5">
                       {hashtags.map((tag, i) => (
-                        <button key={i} onClick={() => applyHashtag(tag)}
+                        <button
+                          key={i}
+                          onClick={() => applyHashtag(tag)}
                           className={`text-[11px] font-medium px-2.5 py-1 rounded-full transition cursor-pointer ${
-                            isDark ? "bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20" : "bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
-                          }`}>
+                            isDark
+                              ? "bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20"
+                              : "bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
+                          }`}
+                        >
                           {tag}
                         </button>
                       ))}
                     </div>
                     <div className="flex gap-2">
-                      <button onClick={applyAllHashtags}
+                      <button
+                        onClick={applyAllHashtags}
                         className={`flex-1 text-xs font-semibold py-2 rounded-lg transition cursor-pointer ${
-                          isDark ? "bg-emerald-500 text-black hover:bg-emerald-400" : "bg-emerald-600 text-white hover:bg-emerald-500"
-                        }`}>+ Add All</button>
-                      <button onClick={generateHashtags}
+                          isDark
+                            ? "bg-emerald-500 text-black hover:bg-emerald-400"
+                            : "bg-emerald-600 text-white hover:bg-emerald-500"
+                        }`}
+                      >
+                        + Add All
+                      </button>
+                      <button
+                        onClick={generateHashtags}
                         className={`text-xs font-semibold px-4 py-2 rounded-lg transition cursor-pointer border ${
-                          isDark ? "border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/10" : "border-emerald-200 text-emerald-600 hover:bg-emerald-50"
-                        }`}>↻ Regenerate</button>
+                          isDark
+                            ? "border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/10"
+                            : "border-emerald-200 text-emerald-600 hover:bg-emerald-50"
+                        }`}
+                      >
+                        ↻ Regenerate
+                      </button>
                     </div>
                   </div>
                 )}
@@ -260,14 +380,22 @@ const CreateReel = () => {
 
           {/* Submit */}
           <div className="px-5 pb-5">
-            <button onClick={handleSubmit} disabled={loading || !video}
+            <button
+              onClick={handleSubmit}
+              disabled={loading || !video}
               className={`w-full py-3 text-sm font-semibold rounded-xl active:scale-95 transition cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed ${
-                isDark ? "bg-sky-500 hover:bg-sky-400 text-black" : "bg-slate-900 hover:bg-slate-700 text-white"
-              }`}>
-              {loading ? uploadProgress > 0 && uploadProgress < 100 ? `Uploading ${uploadProgress}%` : "Processing..." : "Share Reel"}
+                isDark
+                  ? "bg-sky-500 hover:bg-sky-400 text-black"
+                  : "bg-slate-900 hover:bg-slate-700 text-white"
+              }`}
+            >
+              {loading
+                ? uploadProgress > 0 && uploadProgress < 100
+                  ? `Uploading ${uploadProgress}%`
+                  : "Processing..."
+                : "Share Reel"}
             </button>
           </div>
-
         </div>
       </div>
     </div>

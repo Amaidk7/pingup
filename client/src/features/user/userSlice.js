@@ -28,7 +28,7 @@ export const updateUser = createAsyncThunk(
       toast.error(data.message);
       return null;
     }
-  }
+  },
 );
 
 const userSlice = createSlice({

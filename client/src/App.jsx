@@ -51,12 +51,16 @@ const App = () => {
     if (!user) return;
 
     const eventSource = new EventSource(
-      import.meta.env.VITE_BASEURL + "/api/message/" + user.id
+      import.meta.env.VITE_BASEURL + "/api/message/" + user.id,
     );
 
     eventSource.onmessage = (event) => {
       let message;
-      try { message = JSON.parse(event.data); } catch { return; }
+      try {
+        message = JSON.parse(event.data);
+      } catch {
+        return;
+      }
       if (!message || !message.from_user_id) return;
 
       const currentPath = pathnameRef.current;
@@ -67,15 +71,20 @@ const App = () => {
         dispatch(addMessage(message));
       } else {
         // user is on another page — show notification toast
-        toast.custom((t) => (
-          <Notification t={t} message={message} />
-        ), { position: "bottom-right", duration: 5000 });
+        toast.custom((t) => <Notification t={t} message={message} />, {
+          position: "bottom-right",
+          duration: 5000,
+        });
       }
     };
 
-    eventSource.onerror = () => { eventSource.close(); };
+    eventSource.onerror = () => {
+      eventSource.close();
+    };
 
-    return () => { eventSource.close(); };
+    return () => {
+      eventSource.close();
+    };
   }, [user, dispatch]);
 
   // ── Polling: connections + user data har 5 sec refresh ──
@@ -87,7 +96,9 @@ const App = () => {
         const token = await getToken();
         dispatch(fetchConnections(token));
         dispatch(fetchUser(token));
-      } catch { /* silent fail */ }
+      } catch {
+        /* silent fail */
+      }
     };
 
     pollRef.current = setInterval(poll, POLL_INTERVAL);

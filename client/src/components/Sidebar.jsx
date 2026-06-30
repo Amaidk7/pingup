@@ -51,7 +51,9 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                 : "text-slate-500 hover:text-slate-900 hover:bg-slate-100/70"
             }`}
           >
-            <Clapperboard className={`w-4 h-4 ${isDark ? "text-white/30" : "text-slate-400"}`} />
+            <Clapperboard
+              className={`w-4 h-4 ${isDark ? "text-white/30" : "text-slate-400"}`}
+            />
             <span className="tracking-wide">Reels</span>
           </Link>
         </div>
@@ -85,17 +87,25 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
       </div>
 
       {/* User + Logout */}
-      <div className={`border-t p-4 mx-2 mb-2 ${isDark ? "border-white/5" : "border-slate-200/60"}`}>
-        <div className={`flex items-center justify-between rounded-xl p-2 transition-all duration-200 cursor-pointer group ${
-          isDark ? "hover:bg-white/5" : "hover:bg-slate-100/70"
-        }`}>
+      <div
+        className={`border-t p-4 mx-2 mb-2 ${isDark ? "border-white/5" : "border-slate-200/60"}`}
+      >
+        <div
+          className={`flex items-center justify-between rounded-xl p-2 transition-all duration-200 cursor-pointer group ${
+            isDark ? "hover:bg-white/5" : "hover:bg-slate-100/70"
+          }`}
+        >
           <div className="flex gap-3 items-center">
             <UserButton />
             <div>
-              <h1 className={`text-sm font-semibold leading-tight ${isDark ? "text-white" : "text-slate-900"}`}>
+              <h1
+                className={`text-sm font-semibold leading-tight ${isDark ? "text-white" : "text-slate-900"}`}
+              >
                 {user?.full_name || "User"}
               </h1>
-              <p className={`text-xs ${isDark ? "text-white/30" : "text-slate-400"}`}>
+              <p
+                className={`text-xs ${isDark ? "text-white/30" : "text-slate-400"}`}
+              >
                 @{user?.username || "username"}
               </p>
             </div>
@@ -103,7 +113,9 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
           <LogOut
             onClick={signOut}
             className={`w-4 h-4 transition cursor-pointer ${
-              isDark ? "text-white/20 group-hover:text-white/50" : "text-slate-300 group-hover:text-slate-500"
+              isDark
+                ? "text-white/20 group-hover:text-white/50"
+                : "text-slate-300 group-hover:text-slate-500"
             }`}
           />
         </div>

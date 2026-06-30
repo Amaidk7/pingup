@@ -13,14 +13,14 @@ export const fetchMessages = createAsyncThunk(
       const { data } = await api.post(
         "/api/message/get",
         { to_user_id: userId },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
       if (data.success) return data.messages;
       return rejectWithValue(data.message);
     } catch (error) {
       return rejectWithValue(error.message);
     }
-  }
+  },
 );
 
 const messagesSlice = createSlice({
@@ -48,5 +48,6 @@ const messagesSlice = createSlice({
   },
 });
 
-export const { addMessage, removeMessage, resetMessages } = messagesSlice.actions;
+export const { addMessage, removeMessage, resetMessages } =
+  messagesSlice.actions;
 export default messagesSlice.reducer;

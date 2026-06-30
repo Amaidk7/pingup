@@ -28,11 +28,17 @@ const MenuItems = ({ setSidebarOpen }) => {
         >
           {({ isActive }) => (
             <>
-              <Icon className={`w-4 h-4 transition-transform duration-200 group-hover:scale-110 ${
-                isActive
-                  ? isDark ? "text-sky-400" : "text-white"
-                  : isDark ? "text-white/30 group-hover:text-white/70" : "text-slate-400 group-hover:text-slate-700"
-              }`} />
+              <Icon
+                className={`w-4 h-4 transition-transform duration-200 group-hover:scale-110 ${
+                  isActive
+                    ? isDark
+                      ? "text-sky-400"
+                      : "text-white"
+                    : isDark
+                      ? "text-white/30 group-hover:text-white/70"
+                      : "text-slate-400 group-hover:text-slate-700"
+                }`}
+              />
               <span className="tracking-wide">{label}</span>
             </>
           )}
