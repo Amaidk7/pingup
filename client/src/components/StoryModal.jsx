@@ -66,7 +66,7 @@ const StoryModal = ({ setShowModal, fetchStories }) => {
           <span className="w-9"></span>
         </div>
 
-        <div className="rounded-2xl h-[420px] flex items-center justify-center relative overflow-hidden shadow-2xl"
+        <div className="rounded-2xl h-105 flex items-center justify-center relative overflow-hidden shadow-2xl"
           style={{ backgroundColor: mode === "text" ? background : "#000" }}>
           {mode === "text" && (
             <textarea className="bg-transparent text-white w-full h-full p-8 text-lg resize-none focus:outline-none placeholder-white/30 text-center"
